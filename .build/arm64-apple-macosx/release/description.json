@@ -1,0 +1,294 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+    "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator_KeyboardSoundSimulator.bundle/Sounds" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Sounds"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator_KeyboardSoundSimulator.bundle/Sounds"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.KeyboardSoundSimulator-arm64-apple-macosx26.0-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/sources",
+      "importPath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AppDelegate.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<KeyboardSoundSimulator-arm64-apple-macosx26.0-release.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "KeyboardSoundSimulator",
+      "moduleOutputPath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/Modules/KeyboardSoundSimulator.swiftmodule",
+      "objects" : [
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AppDelegate.swift.o",
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/main.swift.o",
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx12.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "KeyboardSoundSimulator_main",
+        "-color-diagnostics",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g"
+      ],
+      "outputFileMapPath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AppDelegate.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/Modules/KeyboardSoundSimulator.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AppDelegate.swift",
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift",
+        "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "KeyboardSoundSimulator" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "KeyboardSoundSimulator",
+      "-c",
+      "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AppDelegate.swift",
+      "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift",
+      "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx12.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "KeyboardSoundSimulator_main",
+      "-color-diagnostics",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "KeyboardSoundSimulator" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AppDelegate.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/sources"
+    },
+    "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AppDelegate.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/resource_bundle_accessor.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.product/Objects.LinkFileList"
+    },
+    "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}
