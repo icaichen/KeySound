@@ -10,6 +10,18 @@
     "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AppDelegate.swiftdeps",
     "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AppDelegate.dia"
   },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AudioSettings.swift": {
+    "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AudioSettings.swift.o",
+    "swiftmodule": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AudioSettings~partial.swiftmodule",
+    "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AudioSettings.swiftdeps",
+    "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/AudioSettings.dia"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SettingsView.swift": {
+    "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/SettingsView.dia"
+  },
   "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift": {
     "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/main.swift.o",
     "swiftmodule": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/release/KeyboardSoundSimulator.build/main~partial.swiftmodule",

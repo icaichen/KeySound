@@ -1,6 +1,7 @@
 import Cocoa
 import CoreGraphics
 import AVFoundation
+import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -10,6 +11,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var specialSoundPlayers: [String: AVAudioPlayer] = [:]
     var soundProfiles: [String] = []
     var currentProfile: String = "Tickeys"
+    
+    // Settings Window
+    var settingsWindow: NSWindow?
+    var audioSettings = AudioSettings.shared
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         loadProfiles()
@@ -22,6 +27,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else if let first = soundProfiles.first {
              selectProfile(first)
         }
+        
+        // Open settings window on launch if user wants, or just leave it for menu
+        // For now, let's open it to show the user the new UI
+        openSettingsWindow()
     }
 
     func loadProfiles() {
@@ -100,22 +109,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let titleItem = NSMenuItem(title: "Keyboard Sounds", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
-        
         menu.addItem(NSMenuItem.separator())
         
-        let toggleItem = NSMenuItem(title: eventTap != nil ? "Mute" : "Unmute", action: #selector(toggleListening), keyEquivalent: "m")
-        menu.addItem(toggleItem)
-        
+        // Settings
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsWindow), keyEquivalent: ",")
+        menu.addItem(settingsItem)
         menu.addItem(NSMenuItem.separator())
-        
-        let profilesItem = NSMenuItem(title: "Sound Profile", action: nil, keyEquivalent: "")
-        profilesItem.isEnabled = false
-        menu.addItem(profilesItem)
         
         for profile in soundProfiles {
-            let item = NSMenuItem(title: profile, action: #selector(profileSelected(_:)), keyEquivalent: "")
-            item.state = (profile == currentProfile) ? .on : .off
-            item.target = self
+            let item = NSMenuItem(title: profile, action: #selector(menuProfileSelected(_:)), keyEquivalent: "")
+            if profile == currentProfile {
+                item.state = .on
+            }
             menu.addItem(item)
         }
         
@@ -123,10 +128,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
         statusItem?.menu = menu
-        statusItem?.button?.title = eventTap != nil ? "🎹" : "🔇"
     }
     
-    @objc func profileSelected(_ sender: NSMenuItem) {
+    @objc func openSettingsWindow() {
+        if settingsWindow == nil {
+            // Create the SwiftUI view that provides the window contents.
+            var settingsView = SettingsView()
+            settingsView.onProfileChange = { [weak self] newProfile in
+                self?.selectProfile(newProfile)
+            }
+            
+            let hostingController = NSHostingController(rootView: settingsView)
+            
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 300, height: 350),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered, defer: false)
+            window.center()
+            window.setFrameAutosaveName("SettingsWindow")
+            window.contentViewController = hostingController
+            window.title = "Settings"
+            window.isReleasedWhenClosed = false
+            settingsWindow = window
+        }
+        
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    @objc func menuProfileSelected(_ sender: NSMenuItem) {
         selectProfile(sender.title)
     }
 
@@ -181,13 +211,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         if let p = player {
-            if p.isPlaying {
-                p.currentTime = 0
-                p.play()
-            } else {
-                p.play()
+                // Apply current settings
+                p.volume = audioSettings.volume
+                if audioSettings.pitch != 1.0 {
+                    p.enableRate = true
+                    p.rate = audioSettings.pitch
+                } else {
+                    p.enableRate = false
+                    p.rate = 1.0
+                }
+                
+                if p.isPlaying {
+                    p.currentTime = 0
+                    p.play()
+                } else {
+                    p.play()
+                }
             }
-        }
     }
 }
 

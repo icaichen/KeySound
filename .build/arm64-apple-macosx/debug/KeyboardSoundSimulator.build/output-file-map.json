@@ -9,6 +9,20 @@
     "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AppDelegate.swiftdeps",
     "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AppDelegate.dia"
   },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AudioSettings.swift": {
+    "dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AudioSettings.d",
+    "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AudioSettings.swift.o",
+    "swiftmodule": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AudioSettings~partial.swiftmodule",
+    "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AudioSettings.swiftdeps",
+    "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/AudioSettings.dia"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SettingsView.swift": {
+    "dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/SettingsView.d",
+    "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/SettingsView.dia"
+  },
   "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift": {
     "dependencies": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/main.d",
     "object": "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/arm64-apple-macosx/debug/KeyboardSoundSimulator.build/main.swift.o",
