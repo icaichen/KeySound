@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings = AudioSettings.shared
     @State private var profiles: [String] = []
-    @State private var selectedProfile: String = UserDefaults.standard.string(forKey: "SelectedProfile") ?? "Tickeys"
+    @State private var selectedProfile: String = UserDefaults.standard.string(forKey: "SelectedProfile") ?? "MX_Blue"
     
     // Callback to notify AppDelegate about profile change
     var onProfileChange: ((String) -> Void)?
@@ -72,15 +72,29 @@ struct SettingsView: View {
     }
     
     private func loadProfiles() {
-        // Load profiles logic similar to AppDelegate
-        // For simplicity, we can fetch from a shared location or just re-scan
-        // Since we are in the same module, we can access the bundle
-        guard let soundsURL = Bundle.module.resourceURL?.appendingPathComponent("Sounds") else { return }
+        var soundsURL: URL?
+        
+        // 1. Try standard App Bundle Resources
+        if let resourceURL = Bundle.main.resourceURL {
+            let candidate = resourceURL.appendingPathComponent("Sounds")
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir) && isDir.boolValue {
+                soundsURL = candidate
+            }
+        }
+        
+        // 2. Fallback to SPM Module
+        if soundsURL == nil {
+            soundsURL = Bundle.module.resourceURL?.appendingPathComponent("Sounds")
+        }
+        
+        guard let finalURL = soundsURL else { return }
+        
         do {
-            let items = try FileManager.default.contentsOfDirectory(atPath: soundsURL.path)
+            let items = try FileManager.default.contentsOfDirectory(atPath: finalURL.path)
             self.profiles = items.filter { item in
                 var isDir: ObjCBool = false
-                return FileManager.default.fileExists(atPath: soundsURL.appendingPathComponent(item).path, isDirectory: &isDir) && isDir.boolValue
+                return FileManager.default.fileExists(atPath: finalURL.appendingPathComponent(item).path, isDirectory: &isDir) && isDir.boolValue
             }.sorted()
         } catch {
             print("Error loading profiles in SettingsView: \(error)")
