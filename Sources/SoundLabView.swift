@@ -91,16 +91,20 @@ struct SoundLabView: View {
     // MARK: - Header & AI Designer
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(recipe.meta.name).font(.headline)
-                Spacer()
-                presetPicker
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("Mix Name")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                TextField("Name your custom switch mix", text: bind(\.meta.name))
+                    .textFieldStyle(.roundedBorder)
+                    .font(.headline)
+                templatePicker
             }
         }
     }
 
-    private var presetPicker: some View {
+    private var templatePicker: some View {
         let selection = Binding<String>(
             get: { selectedPreset },
             set: { name in
@@ -113,15 +117,15 @@ struct SoundLabView: View {
             }
         )
         return HStack(spacing: 6) {
-            Text("Preset").font(.caption).foregroundColor(.secondary)
-            Picker("Preset", selection: selection) {
+            Text("Template").font(.caption).foregroundColor(.secondary)
+            Picker("Template", selection: selection) {
                 ForEach(presets.map { $0.lastPathComponent }, id: \.self) { name in
                     Text(name.replacingOccurrences(of: ".recipe.json", with: "")).tag(name)
                 }
             }
             .pickerStyle(.menu)
             .labelsHidden()
-            .frame(width: 170)
+            .frame(width: 155)
         }
     }
 
@@ -167,21 +171,20 @@ struct SoundLabView: View {
 
     private var aiDesignerSection: some View {
         let hasMixKey = !EnvConfig.deepseekApiKey.isEmpty || !EnvConfig.geminiApiKey.isEmpty
-        let hasEleven = !EnvConfig.elevenLabsApiKey.isEmpty
 
         return GroupBox {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Label("AI Sound Lab (.env)", systemImage: "sparkles")
+                    Label("AI Switch Mixer (DeepSeek / Gemini)", systemImage: "sparkles")
                         .font(.subheadline.bold())
                     Spacer()
-                    Text(hasMixKey || hasEleven ? "API Key Loaded" : "Add Keys to .env")
+                    Text(hasMixKey ? "API Key Loaded" : "Smart Offline Mode")
                         .font(.caption2)
-                        .foregroundColor(hasMixKey || hasEleven ? .green : .secondary)
+                        .foregroundColor(hasMixKey ? .green : .secondary)
                 }
 
                 HStack(spacing: 8) {
-                    TextField("Describe a switch or creative sound (e.g. \"Raindrops on wood\", \"Animal Crossing\")", text: $aiPrompt)
+                    TextField("Describe a mechanical keyboard feel (e.g. \"Deep creamy gasket thock\")", text: $aiPrompt)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit { runAIDesigner() }
                     Button(action: runAIDesigner) {
@@ -192,13 +195,24 @@ struct SoundLabView: View {
                         }
                     }
                     .disabled(isGeneratingAI || aiPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .help("Uses GEMINI_API_KEY from .env to design a custom mechanical switch recipe")
+                    .help("Mixes real mechanical switch recordings to match your description")
+                }
 
-                    Button(action: runSFXGenerator) {
-                        Text("AI SFX Pack")
+                Text("Tip: Describe switch type + mods (e.g. foam, gasket, lubed). For non-keyboard SFX like raindrops, use Browse All Sounds.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(["Deep creamy gasket thock", "Quiet office Topre", "Crisp retro ABS clack", "Woody mahjong marble"], id: \.self) { tip in
+                            Button(tip) {
+                                aiPrompt = tip
+                                runAIDesigner()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
                     }
-                    .disabled(isGeneratingAI || aiPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .help("Uses ELEVENLABS_API_KEY from .env to generate a brand-new WAV sound pack")
                 }
 
                 if let status = aiStatusMessage {
@@ -234,37 +248,14 @@ struct SoundLabView: View {
                     geminiKey: gmKey
                 )
                 await MainActor.run {
-                    recipe = result.recipe
-                    AudioEngineManager.shared.updateRecipe(result.recipe)
-                    aiStatusMessage = "\(result.statusNote): \(result.recipe.meta.name)"
-                    isGeneratingAI = false
-                }
-            } catch {
-                await MainActor.run {
-                    aiError = error.localizedDescription
-                    isGeneratingAI = false
-                }
-            }
-        }
-    }
-
-    private func runSFXGenerator() {
-        aiError = nil
-        aiStatusMessage = nil
-        isGeneratingAI = true
-        let prompt = aiPrompt
-        let apiKey = EnvConfig.elevenLabsApiKey
-        Task {
-            do {
-                let packID = try await SFXGenerator.generatePack(prompt: prompt, apiKey: apiKey)
-                await MainActor.run {
-                    if let delegate = NSApp.delegate as? AppDelegate {
-                        delegate.loadProfiles()
-                        delegate.selectProfile(packID)
-                    } else {
-                        AudioEngineManager.shared.loadSounds(for: packID)
+                    var updated = result.recipe
+                    let cleanName = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !cleanName.isEmpty {
+                        updated.meta.name = String(cleanName.prefix(32))
                     }
-                    aiStatusMessage = "Created & activated pack \"\(SoundPackCatalog.displayName(for: packID))\" (also in Browse All Sounds)."
+                    recipe = updated
+                    AudioEngineManager.shared.updateRecipe(updated)
+                    aiStatusMessage = "\(result.statusNote) — edit name below & click Save Mix to keep it."
                     isGeneratingAI = false
                 }
             } catch {
@@ -507,19 +498,25 @@ struct SoundLabView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button("Save as My Sound") {
+            Button("Save Mix") {
                 var toSave = recipe
-                toSave.meta.name = "My Sound"
-                AudioEngineManager.shared.saveRecipe(toSave)
+                let trimmed = toSave.meta.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                toSave.meta.name = trimmed.isEmpty ? "My Custom Mix" : trimmed
+                recipe = toSave
+                AudioEngineManager.shared.saveNamedRecipe(toSave)
+                if let delegate = NSApp.delegate as? AppDelegate {
+                    delegate.loadProfiles()
+                    delegate.updateMenu()
+                }
                 withAnimation { savedFlash = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     withAnimation { savedFlash = false }
                 }
             }
             .buttonStyle(.borderedProminent)
 
             if savedFlash {
-                Text("Saved").foregroundColor(.green).font(.caption)
+                Text("Saved to Library!").foregroundColor(.green).font(.caption)
             }
 
             Spacer()

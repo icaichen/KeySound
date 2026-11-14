@@ -1,0 +1,11 @@
+{
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/DerivedSources/resource_bundle_accessor.swift" : {
+    "abi-baseline-json" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound.abi.json",
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound-primary.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound-primary.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound-primary.dia",
+    "swiftdoc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound.swiftdoc",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound.swiftmodule",
+    "swiftsourceinfo" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/KeySound.swiftsourceinfo"
+  }
+}

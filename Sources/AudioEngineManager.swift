@@ -125,10 +125,21 @@ class AudioEngineManager: ObservableObject {
             self.soundBuffers.removeAll()
             self.specialSoundBuffers.removeAll()
             
-            // Recipe mode: synthesize instead of playing samples
+            // Recipe mode: Sound Lab workspace or a named Saved Mix
             if profile == AudioEngineManager.recipeProfileName {
                 self.setupRecipeMode()
                 return
+            }
+            if profile.hasPrefix(SoundPackCatalog.savedRecipePrefix) {
+                let base = String(profile.dropFirst(SoundPackCatalog.savedRecipePrefix.count))
+                let url = SoundPackCatalog.savedRecipesDirectory().appendingPathComponent("\(base).recipe.json")
+                if let loaded = try? SoundRecipe.load(from: url) {
+                    if self.isRecipeProfile {
+                        self.teardownRecipeMode()
+                    }
+                    self.setupRecipeMode(overrideRecipe: loaded)
+                    return
+                }
             }
             self.teardownRecipeMode()
             
@@ -251,6 +262,28 @@ class AudioEngineManager: ObservableObject {
         }
     }
     
+    /// Save a named mix to `SavedRecipes/` so it appears in Sound Library and never overwrites built-in presets.
+    @discardableResult
+    func saveNamedRecipe(_ recipe: SoundRecipe) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: " -_"))
+        let cleaned = String(recipe.meta.name.unicodeScalars.filter { allowed.contains($0) })
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "-")
+            .lowercased()
+        let base = cleaned.isEmpty ? "custom-mix-\(Int(Date().timeIntervalSince1970))" : cleaned
+        let url = SoundPackCatalog.savedRecipesDirectory().appendingPathComponent("\(base).recipe.json")
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(recipe)
+            try data.write(to: url, options: .atomic)
+        } catch {
+            print("Sound Lab: failed to save named recipe: \(error)")
+        }
+        saveRecipe(recipe)
+        return "\(SoundPackCatalog.savedRecipePrefix)\(base)"
+    }
+
     /// Delete the user's saved recipe (Sound Lab "Reset").
     func deleteUserRecipe() {
         try? FileManager.default.removeItem(at: AudioEngineManager.userRecipeURL)
@@ -300,15 +333,16 @@ class AudioEngineManager: ObservableObject {
     }
     
     /// Must be called on audioQueue. Builds the recipe renderer and inserts EQ/reverb into the chain.
-    private func setupRecipeMode() {
+    private func setupRecipeMode(overrideRecipe: SoundRecipe? = nil) {
         guard !isRecipeProfile else { return }
         
-        // Search order: user's saved recipe -> app bundle -> SPM module bundle.
-        // NOTE: Bundle.module fatalErrors in a packaged .app, so only touch it as last fallback.
-        var recipe: SoundRecipe?
-        let userURL = AudioEngineManager.userRecipeURL
-        if FileManager.default.fileExists(atPath: userURL.path) {
-            recipe = try? SoundRecipe.load(from: userURL) // nil if it is an old v1 file
+        // Search order: explicit saved mix -> user's workspace recipe -> app bundle -> SPM module bundle.
+        var recipe: SoundRecipe? = overrideRecipe
+        if recipe == nil {
+            let userURL = AudioEngineManager.userRecipeURL
+            if FileManager.default.fileExists(atPath: userURL.path) {
+                recipe = try? SoundRecipe.load(from: userURL)
+            }
         }
         if recipe == nil {
             recipe = bundledRecipe()

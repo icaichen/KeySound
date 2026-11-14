@@ -224,6 +224,33 @@ enum SoundPackCatalog {
         return dir
     }
 
+    static func savedRecipesDirectory() -> URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("KeySound/SavedRecipes")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    static let savedRecipePrefix = "@recipe:"
+
+    static func isDeletable(_ id: String) -> Bool {
+        if id.hasPrefix(savedRecipePrefix) { return true }
+        let customPath = customPacksDirectory().appendingPathComponent(id).path
+        return FileManager.default.fileExists(atPath: customPath)
+    }
+
+    static func deleteCustomSound(id: String) {
+        if id.hasPrefix(savedRecipePrefix) {
+            let fileName = String(id.dropFirst(savedRecipePrefix.count))
+            let url = savedRecipesDirectory().appendingPathComponent("\(fileName).recipe.json")
+            try? FileManager.default.removeItem(at: url)
+        } else {
+            let dir = customPacksDirectory().appendingPathComponent(id)
+            try? FileManager.default.removeItem(at: dir)
+        }
+        setPinned(id, pinned: false)
+    }
+
     /// Returns all user-facing sound packs (excluding `Layer_*` Sound Lab building blocks).
     static func allPacks() -> [SoundPackInfo] {
         var infos: [SoundPackInfo] = []
@@ -268,6 +295,23 @@ enum SoundPackCatalog {
             }
         }
 
+        // Include user-saved Sound Lab mixes
+        let recipesDir = savedRecipesDirectory()
+        let recipeFiles = (try? FileManager.default.contentsOfDirectory(atPath: recipesDir.path)) ?? []
+        for file in recipeFiles where file.hasSuffix(".recipe.json") {
+            let base = String(file.dropLast(".recipe.json".count))
+            let url = recipesDir.appendingPathComponent(file)
+            let loadedName = (try? SoundRecipe.load(from: url))?.meta.name ?? base
+            infos.append(SoundPackInfo(
+                id: "\(savedRecipePrefix)\(base)",
+                displayName: loadedName,
+                category: .custom,
+                feel: .tactile,
+                summary: "Saved Sound Lab custom mix.",
+                license: "Saved Mix"
+            ))
+        }
+
         return infos.sorted { a, b in
             if a.category != b.category {
                 let order: [SoundPackInfo.Category] = [.real, .custom, .classic]
@@ -279,7 +323,15 @@ enum SoundPackCatalog {
 
     static func displayName(for id: String) -> String {
         if id == AudioEngineManager.recipeProfileName {
-            return "Sound Lab (Custom Mix)"
+            return "Sound Lab (Workspace)"
+        }
+        if id.hasPrefix(savedRecipePrefix) {
+            let base = String(id.dropFirst(savedRecipePrefix.count))
+            let url = savedRecipesDirectory().appendingPathComponent("\(base).recipe.json")
+            if let loaded = try? SoundRecipe.load(from: url) {
+                return loaded.meta.name
+            }
+            return base.replacingOccurrences(of: "-", with: " ")
         }
         return knownPacks[id]?.displayName ?? id.replacingOccurrences(of: "_", with: " ")
     }
