@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keysound.local/schemas/sound-recipe-v1.json",
+  "title": "Keysound Sound Recipe v1",
+  "description": "A Sound Recipe is the complete parameter set produced by the Sound Lab (DJ board). It fully describes how one keystroke event is rendered into sound: layered synthesis (click / body / release / space), optional sample layers, master FX, humanization, and per-key-category overrides. A recipe is a plain JSON file (a few KB), shareable and importable.",
+  "type": "object",
+  "required": ["version", "meta", "layers", "master", "humanize"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Recipe format version. Engines must reject recipes with a newer major version."
+    },
+    "meta": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "description": "Display name, e.g. 'Custom Thock'." },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Free-form tags for the community gallery, e.g. ['thock', 'deep', 'realistic'] or ['8bit', 'animalese', 'toy']."
+        },
+        "basedOn": { "type": "string", "description": "Optional id/name of the parent recipe this was remixed from." }
+      }
+    },
+    "renderMode": {
+      "type": "string",
+      "enum": ["realtime", "prerender"],
+      "default": "realtime",
+      "description": "realtime = synthesize per keystroke via AVAudioSourceNode (Sound Lab mode). prerender = bake variations to buffers at load time (low-power / performance mode). Same recipe, two render paths."
+    },
+    "layers": {
+      "type": "object",
+      "required": ["click", "body"],
+      "description": "The four channel strips of the DJ board. Every keystroke renders all enabled layers and mixes them.",
+      "properties": {
+        "click": {
+          "type": "object",
+          "description": "Attack transient: the initial 'tick' when the switch bottoms out. Physically a short filtered noise burst.",
+          "required": ["enabled", "gain"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "gain": { "type": "number", "minimum": 0, "maximum": 1.5 },
+            "noise": {
+              "type": "object",
+              "properties": {
+                "color": { "type": "string", "enum": ["white", "pink"], "default": "white" },
+                "durationMs": { "type": "number", "minimum": 0.5, "maximum": 30, "default": 6 },
+                "hpFilterHz": { "type": "number", "minimum": 200, "maximum": 12000, "default": 2500, "description": "High-pass cutoff. Higher = sharper, more 'clacky' tick." },
+                "sharpness": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5, "description": "Macro: simultaneously raises hpFilterHz and shortens durationMs." }
+              }
+            },
+            "envelope": { "$ref": "#/$defs/envelope" },
+            "sample": { "$ref": "#/$defs/sampleLayer" }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "The thock/clack core: modal resonance of keycap + plate + case. Synthesized as 1-4 exponentially decaying resonators.",
+          "required": ["enabled", "gain", "modes"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "gain": { "type": "number", "minimum": 0, "maximum": 1.5 },
+            "modes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "required": ["freqHz", "decayMs", "gain"],
+                "properties": {
+                  "freqHz": { "type": "number", "minimum": 40, "maximum": 8000 },
+                  "decayMs": { "type": "number", "minimum": 5, "maximum": 400 },
+                  "gain": { "type": "number", "minimum": 0, "maximum": 1.5 },
+                  "q": { "type": "number", "minimum": 1, "maximum": 40, "default": 8, "description": "Resonance bandwidth. Higher Q = more tonal 'ping', lower Q = duller 'thud'." }
+                }
+              }
+            },
+            "basePitchShift": { "type": "number", "minimum": -24, "maximum": 24, "default": 0, "description": "Global pitch offset of the body in semitones. The primary thock(deep) <-> clack(bright) control." },
+            "envelope": { "$ref": "#/$defs/envelope" },
+            "sample": { "$ref": "#/$defs/sampleLayer" }
+          }
+        },
+        "release": {
+          "type": "object",
+          "description": "Key-up sound: switch stem returning. Independent layer triggered on key release, not on key down.",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "gain": { "type": "number", "minimum": 0, "maximum": 1.5, "default": 0.3 },
+            "inheritFrom": { "type": "string", "enum": ["click", "body", "none"], "default": "click", "description": "'click' = reuse the click layer scaled by gain (good default). 'none' = use the embedded params below." },
+            "noise": { "type": "object", "description": "Same shape as layers.click.noise, used when inheritFrom = 'none'." },
+            "pitchShift": { "type": "number", "minimum": -24, "maximum": 24, "default": 3, "description": "Release sounds are naturally slightly higher than downstrokes." }
+          }
+        },
+        "space": {
+          "type": "object",
+          "description": "The room the keyboard sits in.",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "reverbWet": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.1 },
+            "roomSize": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.3 },
+            "stereoWidth": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.7, "description": "0 = mono center. 1 = keys panned by physical position (left hand keys lean left)." }
+          }
+        }
+      }
+    },
+    "master": {
+      "type": "object",
+      "required": ["gain"],
+      "properties": {
+        "gain": { "type": "number", "minimum": 0, "maximum": 1.5, "default": 1 },
+        "eq": {
+          "type": "object",
+          "properties": {
+            "lowDb": { "type": "number", "minimum": -12, "maximum": 12, "default": 0 },
+            "midDb": { "type": "number", "minimum": -12, "maximum": 12, "default": 0 },
+            "highDb": { "type": "number", "minimum": -12, "maximum": 12, "default": 0 }
+          }
+        },
+        "fx": {
+          "type": "object",
+          "description": "Stylized effects chain. Off by default; these power the 'toy' recipes (8-bit, Animalese-like, lo-fi).",
+          "properties": {
+            "bitcrush": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "bitDepth": { "type": "integer", "minimum": 4, "maximum": 16, "default": 8 }, "downsample": { "type": "integer", "minimum": 1, "maximum": 16, "default": 4 } } },
+            "delay": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "timeMs": { "type": "number", "minimum": 20, "maximum": 500 }, "feedback": { "type": "number", "minimum": 0, "maximum": 0.9 }, "mix": { "type": "number", "minimum": 0, "maximum": 1 } } }
+          }
+        },
+        "macros": {
+          "type": "object",
+          "description": "Simple-mode controls (the XY pad and skeuomorphic knobs). Each macro sweeps multiple DSP params at once. 'path' uses dot notation into this recipe, e.g. 'layers.body.basePitchShift'.",
+          "properties": {
+            "x": { "$ref": "#/$defs/macro", "description": "Default X axis of the pad: thock <-> clack." },
+            "y": { "$ref": "#/$defs/macro", "description": "Default Y axis of the pad: soft <-> hard." }
+          }
+        }
+      }
+    },
+    "humanize": {
+      "type": "object",
+      "description": "Per-keystroke randomization. Mandatory for realism: without it, any sound becomes a machine gun within 30 seconds.",
+      "properties": {
+        "pitchJitterSt": { "type": "number", "minimum": 0, "maximum": 2, "default": 0.4, "description": "Random pitch offset per keystroke, in semitones (±)." },
+        "gainJitterDb": { "type": "number", "minimum": 0, "maximum": 6, "default": 1.5 },
+        "timingJitterMs": { "type": "number", "minimum": 0, "maximum": 20, "default": 2, "description": "Random sub-perceptual onset jitter; also decorrelates layer alignment." }
+      }
+    },
+    "keymap": {
+      "type": "object",
+      "description": "Per-key-category overrides. Categories match the existing sample-pack engine: generic / space / enter / backspace / modifier. Values are offsets applied on top of the base recipe.",
+      "properties": {
+        "space": { "$ref": "#/$defs/keyOverride" },
+        "enter": { "$ref": "#/$defs/keyOverride" },
+        "backspace": { "$ref": "#/$defs/keyOverride" },
+        "modifier": { "$ref": "#/$defs/keyOverride" },
+        "keyPitchMode": {
+          "type": "string",
+          "enum": ["off", "rows", "pentatonic"],
+          "default": "off",
+          "description": "'rows' = pitch follows physical key rows (top row higher). 'pentatonic' = keys mapped to a pentatonic scale, typing becomes musical. Powers the playful recipes."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "attackMs": { "type": "number", "minimum": 0, "maximum": 50, "default": 1 },
+        "decayMs": { "type": "number", "minimum": 1, "maximum": 500, "default": 40 }
+      }
+    },
+    "sampleLayer": {
+      "type": "object",
+      "description": "Hybrid mode: replace or blend this synth layer with a user-imported sample (their own recorded keyboard, a chess piece, anything).",
+      "required": ["file", "mix"],
+      "properties": {
+        "file": { "type": "string", "description": "Path/URL of the imported wav/mp3/aiff." },
+        "mix": { "type": "number", "minimum": 0, "maximum": 1, "description": "0 = pure synth, 1 = pure sample." },
+        "trimMs": { "type": "object", "properties": { "start": { "type": "number" }, "end": { "type": "number" } } }
+      }
+    },
+    "macro": {
+      "type": "object",
+      "required": ["label", "targets"],
+      "properties": {
+        "label": { "type": "string", "description": "User-facing name, e.g. 'thock <-> clack'." },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["path", "from", "to"],
+            "properties": {
+              "path": { "type": "string" },
+              "from": { "type": "number", "description": "Param value at macro position 0." },
+              "to": { "type": "number", "description": "Param value at macro position 1." }
+            }
+          }
+        }
+      }
+    },
+    "keyOverride": {
+      "type": "object",
+      "properties": {
+        "pitchShift": { "type": "number", "minimum": -24, "maximum": 24, "default": 0, "description": "Semitones relative to the base recipe. Spacebar typically -2 to -4 (deeper, like stabilizers)." },
+        "gainScale": { "type": "number", "minimum": 0, "maximum": 2, "default": 1 },
+        "decayScale": { "type": "number", "minimum": 0.2, "maximum": 3, "default": 1, "description": "Larger keys resonate longer." }
+      }
+    }
+  }
+}

@@ -22,6 +22,13 @@ class AudioEngineManager: ObservableObject {
     private var soundBuffers: [String: [AVAudioPCMBuffer]] = [:]
     private var specialSoundBuffers: [String: [AVAudioPCMBuffer]] = [:]
     
+    // Recipe mode ("Sound Lab" profile): sample-based DJ board renderer
+    static let recipeProfileName = "Sound Lab"
+    private var recipeEngine: RecipeEngine?
+    private var isRecipeProfile = false
+    private var recipeEQ: AVAudioUnitEQ?
+    private var recipeReverb: AVAudioUnitReverb?
+    
     // Per-profile volume adjustments to balance loudness
     private let profileVolumeSettings: [String: Float] = [
         "MX_Blue": 0.5,
@@ -32,7 +39,8 @@ class AudioEngineManager: ObservableObject {
         "Creamy": 0.9,
         "iPhone": 0.4,
         "BlackBerry": 0.7,
-        "Opera_GX": 0.7
+        "Opera_GX": 0.7,
+        "ALPS": 0.8
     ]
     
     // Settings
@@ -47,6 +55,10 @@ class AudioEngineManager: ObservableObject {
             updatePitch()
         }
     }
+
+    /// 0 = constant volume, 1 = noticeable softening during rapid typing bursts.
+    var velocitySensitivity: Double = 0.35
+    private var lastKeyDownTime: CFAbsoluteTime = 0
     
     private init() {
         engine = AVAudioEngine()
@@ -113,6 +125,13 @@ class AudioEngineManager: ObservableObject {
             self.soundBuffers.removeAll()
             self.specialSoundBuffers.removeAll()
             
+            // Recipe mode: synthesize instead of playing samples
+            if profile == AudioEngineManager.recipeProfileName {
+                self.setupRecipeMode()
+                return
+            }
+            self.teardownRecipeMode()
+            
             var soundsURL: URL?
             
             // 1. Try standard App Bundle Resources
@@ -124,9 +143,22 @@ class AudioEngineManager: ObservableObject {
                 }
             }
             
-            // 2. Fallback to SPM Module
+            // 2. Fallback to user / AI-generated custom packs
             if soundsURL == nil {
-                soundsURL = Bundle.module.resourceURL?.appendingPathComponent("Sounds").appendingPathComponent(profile)
+                let candidate = SoundPackCatalog.customPacksDirectory().appendingPathComponent(profile)
+                var isDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir), isDir.boolValue {
+                    soundsURL = candidate
+                }
+            }
+
+            // 3. Fallback to SPM Module (debug `swift run` only)
+            if soundsURL == nil {
+                let candidate = SoundPackCatalog.safeModuleResourceURL?.appendingPathComponent("Sounds").appendingPathComponent(profile)
+                var isDir: ObjCBool = false
+                if let c = candidate, FileManager.default.fileExists(atPath: c.path, isDirectory: &isDir), isDir.boolValue {
+                    soundsURL = c
+                }
             }
             
             guard let finalURL = soundsURL else {
@@ -165,6 +197,270 @@ class AudioEngineManager: ObservableObject {
                 }
             } catch {
                 print("Error loading sounds for \(profile): \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Recipe mode (Sound Lab)
+    
+    /// Where the Sound Lab panel saves the user's tuned recipe.
+    static var userRecipeURL: URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("KeySound/Recipes")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("custom-thock.recipe.json")
+    }
+    
+    /// Current recipe on the engine (nil when a sample profile is active).
+    var currentRecipe: SoundRecipe? { recipeEngine?.recipe }
+    
+    /// Live-update recipe params from the Sound Lab panel.
+    func updateRecipe(_ recipe: SoundRecipe) {
+        audioQueue.async { [weak self] in
+            guard let self = self, self.isRecipeProfile else { return }
+            let hadReverb = self.recipeReverb != nil
+            self.recipeEngine?.update(recipe: recipe)
+            // Space layer toggled -> rebuild the chain; otherwise update node params in place
+            if recipe.layers.space.enabled != hadReverb {
+                self.applyRecipeChainAfterTear()
+            } else {
+                if let eq = self.recipeEQ { self.configureRecipeEQ(eq, recipe: recipe) }
+                if let reverb = self.recipeReverb { self.configureRecipeReverb(reverb, recipe: recipe) }
+            }
+        }
+    }
+    
+    /// Rebuild EQ/reverb chain (reverb node added or removed).
+    private func applyRecipeChainAfterTear() {
+        guard let recipe = recipeEngine?.recipe else { return }
+        if let eq = recipeEQ { engine.detach(eq) }
+        if let reverb = recipeReverb { engine.detach(reverb) }
+        recipeEQ = nil
+        recipeReverb = nil
+        applyRecipeChain(recipe)
+    }
+    
+    /// Persist the user's recipe so it survives restarts and is preferred over the bundle preset.
+    func saveRecipe(_ recipe: SoundRecipe) {
+        let url = AudioEngineManager.userRecipeURL
+        do {
+            let data = try JSONEncoder().encode(recipe)
+            try data.write(to: url, options: .atomic)
+        } catch {
+            print("Sound Lab: failed to save recipe: \(error)")
+        }
+    }
+    
+    /// Delete the user's saved recipe (Sound Lab "Reset").
+    func deleteUserRecipe() {
+        try? FileManager.default.removeItem(at: AudioEngineManager.userRecipeURL)
+    }
+    
+    /// All bundled preset files (Recipes/presets/*.recipe.json), sorted by filename.
+    /// Same lookup order as bundledRecipe(): app bundle first, SPM module as fallback.
+    func bundledPresetURLs() -> [URL] {
+        var dir: URL?
+        if let resourceURL = Bundle.main.resourceURL {
+            let candidate = resourceURL.appendingPathComponent("Recipes/presets")
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir), isDir.boolValue {
+                dir = candidate
+            }
+        }
+        if dir == nil {
+            dir = SoundPackCatalog.safeModuleResourceURL?.appendingPathComponent("Recipes/presets")
+        }
+        guard let finalDir = dir else { return [] }
+        let files = ((try? FileManager.default.contentsOfDirectory(atPath: finalDir.path)) ?? [])
+            .filter { $0.hasSuffix(".recipe.json") }
+            .sorted()
+        return files.map { finalDir.appendingPathComponent($0) }
+    }
+
+    /// Load a preset file for auditioning. Does not touch the user's saved recipe
+    /// (that only happens via saveRecipe / deleteUserRecipe).
+    func loadPresetFile(_ url: URL) -> SoundRecipe? {
+        try? SoundRecipe.load(from: url)
+    }
+
+    /// Load the bundled custom-thock preset, ignoring the user's saved recipe.
+    func bundledRecipe() -> SoundRecipe? {
+        if let resourceURL = Bundle.main.resourceURL {
+            let candidate = resourceURL.appendingPathComponent("Recipes/presets/custom-thock.recipe.json")
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                return try? SoundRecipe.load(from: candidate)
+            }
+        }
+        // SPM debug builds only; never reached in a packaged .app
+        if let candidate = SoundPackCatalog.safeModuleResourceURL?.appendingPathComponent("Recipes/presets/custom-thock.recipe.json"),
+           FileManager.default.fileExists(atPath: candidate.path) {
+            return try? SoundRecipe.load(from: candidate)
+        }
+        return nil
+    }
+    
+    /// Must be called on audioQueue. Builds the recipe renderer and inserts EQ/reverb into the chain.
+    private func setupRecipeMode() {
+        guard !isRecipeProfile else { return }
+        
+        // Search order: user's saved recipe -> app bundle -> SPM module bundle.
+        // NOTE: Bundle.module fatalErrors in a packaged .app, so only touch it as last fallback.
+        var recipe: SoundRecipe?
+        let userURL = AudioEngineManager.userRecipeURL
+        if FileManager.default.fileExists(atPath: userURL.path) {
+            recipe = try? SoundRecipe.load(from: userURL) // nil if it is an old v1 file
+        }
+        if recipe == nil {
+            recipe = bundledRecipe()
+        }
+        guard let recipe = recipe else {
+            print("Sound Lab: failed to load recipe")
+            return
+        }
+        
+        let re = RecipeEngine()
+        re.loadSample = { [weak self] ref in self?.loadSampleBuffer(ref: ref) }
+        re.normalizeBuffer = { [weak self] buffer, target in self?.normalize(buffer: buffer, targetVolume: target) }
+        re.packVolume = { [weak self] pack in self?.profileVolumeSettings[pack] ?? 1.0 }
+        re.load(recipe: recipe)
+        recipeEngine = re
+        isRecipeProfile = true
+        applyRecipeChain(recipe)
+    }
+    
+    /// Insert playersMixer -> EQ -> [reverb] -> speedUnit for recipe mode.
+    private func applyRecipeChain(_ recipe: SoundRecipe) {
+        let format = mainMixer.outputFormat(forBus: 0)
+        engine.disconnectNodeOutput(playersMixer)
+        
+        let eq = AVAudioUnitEQ(numberOfBands: 3)
+        configureRecipeEQ(eq, recipe: recipe)
+        engine.attach(eq)
+        engine.connect(playersMixer, to: eq, format: format)
+        recipeEQ = eq
+        
+        var tail: AVAudioNode = eq
+        if recipe.layers.space.enabled {
+            let reverb = AVAudioUnitReverb()
+            configureRecipeReverb(reverb, recipe: recipe)
+            engine.attach(reverb)
+            engine.connect(eq, to: reverb, format: format)
+            recipeReverb = reverb
+            tail = reverb
+        }
+        engine.connect(tail, to: speedUnit, format: format)
+    }
+    
+    private func configureRecipeEQ(_ eq: AVAudioUnitEQ, recipe: SoundRecipe) {
+        let e = recipe.master.eq
+        let bands = eq.bands
+        bands[0].filterType = .lowShelf
+        bands[0].frequency = 250
+        bands[0].gain = Float(e.lowDb)
+        bands[0].bypass = e.lowDb == 0
+        bands[1].filterType = .parametric
+        bands[1].frequency = 1000
+        bands[1].bandwidth = 1.0
+        bands[1].gain = Float(e.midDb)
+        bands[1].bypass = e.midDb == 0
+        bands[2].filterType = .highShelf
+        bands[2].frequency = 6000
+        bands[2].gain = Float(e.highDb)
+        bands[2].bypass = e.highDb == 0
+        eq.globalGain = 0
+    }
+    
+    private func configureRecipeReverb(_ reverb: AVAudioUnitReverb, recipe: SoundRecipe) {
+        let s = recipe.layers.space
+        let preset: AVAudioUnitReverbPreset = s.roomSize < 0.33 ? .smallRoom
+            : s.roomSize < 0.66 ? .mediumRoom : .largeHall
+        reverb.loadFactoryPreset(preset)
+        reverb.wetDryMix = Float(s.reverbWet * 100)
+    }
+    
+    /// Must be called on audioQueue.
+    private func teardownRecipeMode() {
+        guard isRecipeProfile else { return }
+        if let eq = recipeEQ { engine.detach(eq) }
+        if let reverb = recipeReverb { engine.detach(reverb) }
+        recipeEQ = nil
+        recipeReverb = nil
+        // Restore the direct playersMixer -> speedUnit connection
+        let format = mainMixer.outputFormat(forBus: 0)
+        engine.disconnectNodeOutput(playersMixer)
+        engine.connect(playersMixer, to: speedUnit, format: format)
+        recipeEngine = nil
+        isRecipeProfile = false
+    }
+    
+    /// Play a raw sample once (Sound Lab picker preview).
+    func previewSample(_ ref: SoundRecipe.SampleRef) {
+        audioQueue.async { [weak self] in
+            guard let self = self, let buffer = self.loadSampleBuffer(ref: ref) else { return }
+            self.playBuffer(buffer)
+        }
+    }
+    
+    /// Resolve a recipe sample reference into a converted buffer.
+    /// file == "generic" means: pick one of the pack's generic variants (1.wav-5.wav) at random.
+    private func loadSampleBuffer(ref: SoundRecipe.SampleRef) -> AVAudioPCMBuffer? {
+        var url: URL?
+        if ref.pack == "@user" {
+            url = URL(fileURLWithPath: ref.file)
+        } else {
+            let fileName = ref.file == "generic" ? "\(Int.random(in: 1...5)).wav" : ref.file
+            if let resourceURL = Bundle.main.resourceURL {
+                let candidate = resourceURL.appendingPathComponent("Sounds/\(ref.pack)/\(fileName)")
+                if FileManager.default.fileExists(atPath: candidate.path) {
+                    url = candidate
+                }
+            }
+            if url == nil, let moduleURL = SoundPackCatalog.safeModuleResourceURL {
+                let candidate = moduleURL.appendingPathComponent("Sounds/\(ref.pack)/\(fileName)")
+                if FileManager.default.fileExists(atPath: candidate.path) {
+                    url = candidate
+                }
+            }
+        }
+        guard let finalURL = url else { return nil }
+        return loadBuffer(url: finalURL)
+    }
+    
+    /// All samples in all built-in packs, for the Sound Lab pickers.
+    func sampleCatalog() -> [(pack: String, files: [String])] {
+        var soundsURL: URL?
+        if let resourceURL = Bundle.main.resourceURL {
+            let candidate = resourceURL.appendingPathComponent("Sounds")
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir), isDir.boolValue {
+                soundsURL = candidate
+            }
+        }
+        if soundsURL == nil {
+            soundsURL = SoundPackCatalog.safeModuleResourceURL?.appendingPathComponent("Sounds")
+        }
+        guard let finalURL = soundsURL else { return [] }
+        
+        let packs = (try? FileManager.default.contentsOfDirectory(atPath: finalURL.path)) ?? []
+        var catalog: [(String, [String])] = []
+        for pack in packs where !pack.hasPrefix(".") {
+            var isDir: ObjCBool = false
+            let packURL = finalURL.appendingPathComponent(pack)
+            guard FileManager.default.fileExists(atPath: packURL.path, isDirectory: &isDir), isDir.boolValue else { continue }
+            let files = ((try? FileManager.default.contentsOfDirectory(atPath: packURL.path)) ?? [])
+                .filter { $0.hasSuffix(".wav") }
+                .sorted()
+            if !files.isEmpty { catalog.append((pack, files)) }
+        }
+        return catalog.sorted { $0.0 < $1.0 }
+    }
+    
+    func playRelease(for keyCode: Int64) {
+        guard isRecipeProfile else { return }
+        audioQueue.async { [weak self] in
+            guard let self = self, let result = self.recipeEngine?.triggerUp(keyCode: keyCode) else { return }
+            for buffer in result.buffers {
+                self.playBuffer(buffer, volume: result.volume, pan: result.pan)
             }
         }
     }
@@ -241,9 +537,30 @@ class AudioEngineManager: ObservableObject {
         specialSoundBuffers[key] = list
     }
     
+    private func velocityScale() -> Float {
+        let now = CFAbsoluteTimeGetCurrent()
+        let dt = now - lastKeyDownTime
+        lastKeyDownTime = now
+        guard velocitySensitivity > 0.01, dt > 0, dt < 0.16 else { return 1.0 }
+        // Fast typing (< 160ms between keys) gently softens each hit so bursts feel organic.
+        let t = max(0.0, min(1.0, (0.16 - dt) / 0.12))
+        return Float(1.0 - t * 0.28 * velocitySensitivity)
+    }
+
     func playSound(for keyCode: Int64) {
         audioQueue.async { [weak self] in
             guard let self = self else { return }
+            let vScale = self.velocityScale()
+            
+            // Recipe mode: layered sample playback
+            if self.isRecipeProfile {
+                if let result = self.recipeEngine?.triggerDown(keyCode: keyCode) {
+                    for buffer in result.buffers {
+                        self.playBuffer(buffer, volume: result.volume * vScale, pan: result.pan)
+                    }
+                }
+                return
+            }
             
             var buffers: [AVAudioPCMBuffer]?
             
@@ -270,11 +587,11 @@ class AudioEngineManager: ObservableObject {
             let buffer = candidates.randomElement()!
             
             // Play
-            self.playBuffer(buffer)
+            self.playBuffer(buffer, volume: vScale)
         }
     }
     
-    private func playBuffer(_ buffer: AVAudioPCMBuffer) {
+    private func playBuffer(_ buffer: AVAudioPCMBuffer, volume: Float = 1.0, pan: Float = 0.0) {
         // Ensure engine is running (lightweight check)
         if !engine.isRunning {
             do {
@@ -288,17 +605,12 @@ class AudioEngineManager: ObservableObject {
         let player = players[currentPlayerIndex]
         currentPlayerIndex = (currentPlayerIndex + 1) % poolSize
         
-        // Schedule buffer
-        // .interrupts options is not available on scheduleBuffer? 
-        // Actually scheduleBuffer appends. 
-        // If we want to cut off previous sound on this specific player (unlikely with pool of 32),
-        // we would stop it. But stop() clears the queue.
-        // With 32 players, overlap is fine.
-        
         if player.isPlaying {
             player.stop() // Clear previous buffer if any (unlikely to happen often with 32 players)
         }
         
+        player.volume = volume
+        player.pan = pan
         player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         player.play()
     }

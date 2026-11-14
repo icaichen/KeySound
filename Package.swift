@@ -1,19 +1,20 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
-    name: "KeyboardSoundSimulator",
+    name: "KeySound",
     platforms: [
         .macOS(.v12)
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "KeyboardSoundSimulator",
+            name: "KeySound",
             dependencies: [],
             path: "Sources",
             resources: [
-                .copy("Sounds")
+                .copy("Sounds"),
+                .copy("Recipes")
             ]
         )
     ]

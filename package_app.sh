@@ -1,6 +1,7 @@
 #!/bin/bash
+set -e
 
-APP_NAME="KeyboardSoundSimulator"
+APP_NAME="KeySound"
 APP_BUNDLE="${APP_NAME}.app"
 BUILD_DIR=".build/release"
 SOURCES_DIR="Sources/Sounds"
@@ -22,6 +23,8 @@ cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
 echo "Copying resources..."
 # Copy the Sounds folder directly to Resources
 cp -r "$SOURCES_DIR" "$APP_BUNDLE/Contents/Resources/"
+# Copy sound recipes (Sound Lab presets)
+cp -r "Sources/Recipes" "$APP_BUNDLE/Contents/Resources/"
 
 echo "Creating Info.plist..."
 cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
@@ -41,6 +44,8 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
     <string>1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSUIElement</key>
     <true/> <!-- Menu Bar App: Hide from Dock -->
     <key>NSHighResolutionCapable</key>
@@ -49,4 +54,32 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
 </plist>
 EOF
 
-echo "Done! App created at $APP_BUNDLE"
+# Create a temporary icon using sips if possible, or just create the entry
+# Since we don't have a physical icon file yet, we can't copy it.
+# However, for a real app, you'd have an .icns file.
+# I will create a placeholder instruction in the script to look for it.
+if [ -f "KeySound.icns" ]; then
+    cp "KeySound.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
+fi
+
+SIGN_IDENTITY="Developer ID Application: chen cai (G8C56JYBN5)"
+if ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
+    SIGN_IDENTITY="-"
+fi
+
+echo "Signing $APP_BUNDLE with: $SIGN_IDENTITY"
+if [ "$SIGN_IDENTITY" = "-" ]; then
+    codesign --force --deep --sign - "$APP_BUNDLE"
+else
+    codesign --force --deep --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
+fi
+
+echo "Verifying signature..."
+codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
+
+echo "Installing to /Applications/$APP_BUNDLE..."
+pkill -x "$APP_NAME" 2>/dev/null || true
+rm -rf "/Applications/$APP_BUNDLE"
+ditto "$APP_BUNDLE" "/Applications/$APP_BUNDLE"
+
+echo "Done! App created, signed, and installed at /Applications/$APP_BUNDLE"

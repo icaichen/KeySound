@@ -2,102 +2,89 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings = AudioSettings.shared
-    @State private var profiles: [String] = []
-    @State private var selectedProfile: String = UserDefaults.standard.string(forKey: "SelectedProfile") ?? "MX_Blue"
-    
-    // Callback to notify AppDelegate about profile change
-    var onProfileChange: ((String) -> Void)?
-    
+    @State private var showLicenses = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Keyboard Sound Settings")
-                .font(.headline)
-                .padding(.bottom, 10)
-            
-            // Profile Selection
-            VStack(alignment: .leading) {
-                Text("Sound Profile")
-                Picker("Profile", selection: $selectedProfile) {
-                    ForEach(profiles, id: \.self) { profile in
-                        Text(profile).tag(profile)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("KeySound Settings")
+                    .font(.headline)
+
+                // Audio & Dynamics
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Audio & Behavior").font(.subheadline).bold()
+
+                        Toggle("Mute All Sounds (⌃⌥M)", isOn: $settings.isMuted)
+                        Toggle("Pause Automatically During Calls (Mic Active)", isOn: $settings.autoMuteOnMic)
+                            .help("Optional: mutes typing sounds whenever another app is using your microphone")
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Volume")
+                                Spacer()
+                                Text("\(Int(settings.volume * 100))%").foregroundColor(.secondary)
+                            }
+                            Slider(value: $settings.volume, in: 0.0...1.0)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Pitch")
+                                Spacer()
+                                Text(String(format: "%.2fx", settings.pitch)).foregroundColor(.secondary)
+                            }
+                            Slider(value: $settings.pitch, in: 0.5...2.0, step: 0.05)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Typing Speed Dynamics")
+                                Spacer()
+                                Text(settings.velocitySensitivity <= 0.01 ? "Off" : "\(Int(settings.velocitySensitivity * 100))%")
+                                    .foregroundColor(.secondary)
+                            }
+                            Slider(value: $settings.velocitySensitivity, in: 0.0...1.0)
+                            Text("Gently softens rapid typing bursts so fast typing stays comfortable.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                // Attribution & Licenses
+                DisclosureGroup("Sound Credits & Open-Source Licenses", isExpanded: $showLicenses) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Real Mechanical Switch Recordings (MIT License)")
+                            .font(.caption).bold()
+                        Text("Cherry MX (Black, Blue, Brown, Red), EG Crystal Purple, EG Oreo, and Topre Purple Hybrid recordings are sourced from hainguyents13/mechvibes-dx under the MIT License.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("Original Synthesized Packs & Sound Lab Layers")
+                            .font(.caption).bold()
+                            .padding(.top, 4)
+                        Text("Layer_* samples and original synthesized profiles are original assets created for KeySound.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 6)
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Reset Audio Defaults") {
+                        settings.volume = 1.0
+                        settings.pitch = 1.0
+                        settings.velocitySensitivity = 0.35
+                        settings.isMuted = false
                     }
                 }
-                .onChange(of: selectedProfile) { newValue in
-                    onProfileChange?(newValue)
-                }
             }
-            
-            Divider()
-            
-            // Volume Control
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Volume")
-                    Spacer()
-                    Text("\(Int(settings.volume * 100))%")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $settings.volume, in: 0.0...1.0)
-            }
-            
-            // Pitch Control
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Pitch")
-                    Spacer()
-                    Text(String(format: "%.2fx", settings.pitch))
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $settings.pitch, in: 0.5...2.0, step: 0.05)
-                Text("Adjusting pitch also affects speed.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            HStack {
-                Spacer()
-                Button("Reset Defaults") {
-                    settings.volume = 1.0
-                    settings.pitch = 1.0
-                }
-            }
+            .padding()
         }
-        .padding()
-        .frame(width: 300, height: 350)
-        .onAppear {
-            loadProfiles()
-        }
-    }
-    
-    private func loadProfiles() {
-        var soundsURL: URL?
-        
-        // 1. Try standard App Bundle Resources
-        if let resourceURL = Bundle.main.resourceURL {
-            let candidate = resourceURL.appendingPathComponent("Sounds")
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir) && isDir.boolValue {
-                soundsURL = candidate
-            }
-        }
-        
-        // 2. Fallback to SPM Module
-        if soundsURL == nil {
-            soundsURL = Bundle.module.resourceURL?.appendingPathComponent("Sounds")
-        }
-        
-        guard let finalURL = soundsURL else { return }
-        
-        do {
-            let items = try FileManager.default.contentsOfDirectory(atPath: finalURL.path)
-            self.profiles = items.filter { item in
-                var isDir: ObjCBool = false
-                return FileManager.default.fileExists(atPath: finalURL.appendingPathComponent(item).path, isDirectory: &isDir) && isDir.boolValue
-            }.sorted()
-        } catch {
-            print("Error loading profiles in SettingsView: \(error)")
-        }
+        .frame(width: 380, height: 420)
     }
 }
