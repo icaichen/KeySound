@@ -286,7 +286,7 @@ enum SoundPackCatalog {
             if FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
                 infos.append(SoundPackInfo(
                     id: item,
-                    displayName: item.replacingOccurrences(of: "_", with: " "),
+                    displayName: cleanPackDisplayName(item),
                     category: .custom,
                     feel: .novelty,
                     summary: "AI-generated custom sound pack.",
@@ -333,7 +333,12 @@ enum SoundPackCatalog {
             }
             return base.replacingOccurrences(of: "-", with: " ")
         }
-        return knownPacks[id]?.displayName ?? id.replacingOccurrences(of: "_", with: " ")
+        return knownPacks[id]?.displayName ?? cleanPackDisplayName(id)
+    }
+
+    private static func cleanPackDisplayName(_ id: String) -> String {
+        let stripped = id.hasPrefix("AI_") ? String(id.dropFirst(3)) : id
+        return stripped.replacingOccurrences(of: "_", with: " ")
     }
 
     static func pinnedIDs() -> [String] {

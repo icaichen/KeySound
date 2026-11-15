@@ -342,10 +342,12 @@ struct SoundLabView: View {
                 Text("Mix Name")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .fixedSize()
                 TextField("Name your custom switch mix", text: bind(\.meta.name))
                     .textFieldStyle(.roundedBorder)
                     .font(.headline)
                 templatePicker
+                    .layoutPriority(1)
             }
         }
     }
@@ -363,7 +365,10 @@ struct SoundLabView: View {
             }
         )
         return HStack(spacing: 6) {
-            Text("Template").font(.caption).foregroundColor(.secondary)
+            Text("Template")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize()
             Picker("Template", selection: selection) {
                 ForEach(presets.map { $0.lastPathComponent }, id: \.self) { name in
                     Text(name.replacingOccurrences(of: ".recipe.json", with: "")).tag(name)

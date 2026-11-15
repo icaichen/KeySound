@@ -383,7 +383,7 @@ enum SFXGenerator {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: " ", with: "_")
         let prefix = String(raw.prefix(24))
-        return prefix.isEmpty ? "AI_SFX_\(Int(Date().timeIntervalSince1970))" : "AI_\(prefix)"
+        return prefix.isEmpty ? "Custom_SFX_\(Int(Date().timeIntervalSince1970))" : prefix
     }
 
     private static func pcmBufferFromRawPCM44100(data: Data) -> AVAudioPCMBuffer? {
