@@ -18,12 +18,7 @@ struct SoundPickerView: View {
     @State private var activeFilter: Filter = .all
     @State private var testInput: String = ""
 
-    // AI SFX Pack generator (moved here so generated packs live right in the library)
-    @State private var showAICreator = false
-    @State private var sfxPrompt: String = ""
-    @State private var isGeneratingSFX = false
-    @State private var sfxStatus: String?
-    @State private var sfxError: String?
+    // Search & filter state only (AI SFX Studio lives in Sound Lab as a Pro tab)
 
     var onSelectPack: ((String) -> Void)?
     var onPinsChanged: (() -> Void)?
@@ -63,15 +58,13 @@ struct SoundPickerView: View {
         VStack(spacing: 0) {
             header
             Divider()
-            aiSFXCreatorSection
-            Divider()
             filterBar
             Divider()
             packList
             Divider()
             testTypingBar
         }
-        .frame(width: 580, height: 580)
+        .frame(width: 580, height: 540)
         .onAppear {
             reloadPacks()
         }
@@ -97,87 +90,6 @@ struct SoundPickerView: View {
             }
         }
         .padding(12)
-    }
-
-    private var aiSFXCreatorSection: some View {
-        DisclosureGroup(isExpanded: $showAICreator) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    TextField("Describe a sound effect (e.g. \"water drop\", \"wooden fish\")", text: $sfxPrompt)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit { generateSFX() }
-                    Button(action: generateSFX) {
-                        if isGeneratingSFX {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Text("Generate")
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isGeneratingSFX || sfxPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-
-                Text("Tip: Describe a crisp single hit or material (avoid long ambient scenes like \"heavy rainstorm\").")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(["water drop", "wooden fish", "bubble wrap pop", "high heel clicking", "typewriter bell"], id: \.self) { tip in
-                            Button(tip) {
-                                sfxPrompt = tip
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
-                    }
-                }
-
-                if let status = sfxStatus {
-                    Text(status).font(.caption).foregroundColor(.green)
-                }
-                if let err = sfxError {
-                    Text(err).font(.caption).foregroundColor(.red)
-                }
-            }
-            .padding(.top, 6)
-        } label: {
-            HStack {
-                Label("Create AI Sound Pack (ElevenLabs SFX)", systemImage: "sparkles")
-                    .font(.subheadline.bold())
-                Spacer()
-                Text(EnvConfig.elevenLabsApiKey.isEmpty ? "Needs ELEVENLABS_API_KEY in .env" : "Ready")
-                    .font(.caption2)
-                    .foregroundColor(EnvConfig.elevenLabsApiKey.isEmpty ? .secondary : .green)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-    }
-
-    private func generateSFX() {
-        sfxError = nil
-        sfxStatus = nil
-        isGeneratingSFX = true
-        let prompt = sfxPrompt
-        let key = EnvConfig.elevenLabsApiKey
-        Task {
-            do {
-                let packID = try await SFXGenerator.generatePack(prompt: prompt, apiKey: key)
-                await MainActor.run {
-                    reloadPacks()
-                    activeFilter = .custom
-                    select(packID)
-                    sfxStatus = "Created \"\(SoundPackCatalog.displayName(for: packID))\" and activated it."
-                    isGeneratingSFX = false
-                }
-            } catch {
-                await MainActor.run {
-                    sfxError = error.localizedDescription
-                    isGeneratingSFX = false
-                }
-            }
-        }
     }
 
     private var filterBar: some View {

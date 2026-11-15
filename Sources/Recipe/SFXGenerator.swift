@@ -25,141 +25,342 @@ enum SFXGenerator {
         }
     }
 
-    static func generatePack(prompt: String, apiKey: String) async throws -> String {
+    private static let proxyEndpoint = "https://website-one-nu-73.vercel.app/api/sfx"
+
+    static func generatePack(prompt: String, apiKey: String = "") async throws -> String {
         let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw SFXError.emptyPrompt }
-        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else {
-            throw SFXError.missingApiKey(EnvConfig.primaryEnvPathHint())
-        }
-
-        guard let url = URL(string: "https://api.elevenlabs.io/v1/sound-generation?output_format=pcm_44100") else {
-            throw SFXError.apiFailed("Invalid ElevenLabs URL.")
-        }
+        let localKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let lower = trimmed.lowercased()
         let isKeyboardPrompt = ["keyboard", "switch", "keycap", "thock", "clack", "typewriter", "mx "]
             .contains { lower.contains($0) }
-        let sfxPrompt = isKeyboardPrompt
-            ? "Single crisp mechanical keyboard key press: \(trimmed), close-mic dry foley, sharp transient, no background noise"
-            : "Short isolated percussive tap sound of \(trimmed), crisp single impact foley, dry close-mic, no ambience, no music"
+        let isGameOrChimePrompt = [
+            "zelda", "animal crossing", "mario", "nintendo", "pokemon",
+            "8-bit", "8bit", "retro", "game", "chime", "bell", "coin",
+            "ui", "beep", "bleep", "synth", "piano", "kalimba", "marimba",
+            "melody", "note", "voice"
+        ].contains { lower.contains($0) }
+
+        let sfxPrompt: String
+        if isKeyboardPrompt {
+            sfxPrompt = "Single crisp mechanical keyboard key press: \(trimmed), close-mic dry foley, sharp transient, no background noise"
+        } else if isGameOrChimePrompt {
+            sfxPrompt = "Short clean game UI sound effect: \(trimmed), isolated crisp single chime or bleep, dry studio audio, no background music"
+        } else {
+            sfxPrompt = "Short isolated percussive tap sound of \(trimmed), crisp single impact foley, dry close-mic, no ambience, no music"
+        }
 
         let body: [String: Any] = [
+            "rawPrompt": trimmed,
             "text": sfxPrompt,
-            "duration_seconds": 1.2,
-            "prompt_influence": 0.75
+            "prompt_influence": 0.75,
+            "plan": true
         ]
+        let jsonData = try JSONSerialization.data(withJSONObject: body)
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(key, forHTTPHeaderField: "xi-api-key")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        request.timeoutInterval = 30
+        let payload: ServerSFXPayload
+        if let proxyResp = try? await requestAudioOrPlan(
+            urlString: proxyEndpoint,
+            jsonBody: jsonData,
+            apiKeyHeader: nil
+        ) {
+            payload = proxyResp
+        } else if !localKey.isEmpty {
+            let rawData = try await requestAudio(
+                urlString: "https://api.elevenlabs.io/v1/sound-generation?output_format=pcm_44100",
+                jsonBody: jsonData,
+                apiKeyHeader: localKey
+            )
+            payload = ServerSFXPayload(
+                isGameOrMelodic: isGameOrChimePrompt,
+                typing: rawData,
+                space: nil,
+                enter: nil,
+                backspace: nil
+            )
+        } else {
+            throw SFXError.apiFailed("AI Sound service is temporarily unavailable. Please try again in a moment.")
+        }
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
-            throw SFXError.apiFailed("ElevenLabs API returned HTTP \(http.statusCode).")
+        guard let baseBuffer = pcmBufferFromRawPCM44100(data: payload.typing) else {
+            throw SFXError.audioProcessingFailed
+        }
+
+        // Adaptive trimming: let every hit decay naturally to silence, with generous
+        // safety ceilings (900ms percussive / 1400ms melodic / 1600ms big keys).
+        let melodic = isGameOrChimePrompt || payload.isGameOrMelodic
+        let sliceMs: Double = melodic ? 1400 : 900
+        let slices = extractActiveSlices(baseBuffer, count: 5, sliceMs: sliceMs)
+        guard !slices.isEmpty else {
+            throw SFXError.apiFailed("Generated audio was too quiet or silent. Try a simpler sound description (no credit used).")
         }
 
         let packID = sanitizePackName(trimmed)
         let packDir = SoundPackCatalog.customPacksDirectory().appendingPathComponent(packID)
         try FileManager.default.createDirectory(at: packDir, withIntermediateDirectories: true)
 
-        guard let baseBuffer = pcmBufferFromRawPCM44100(data: data) else {
-            throw SFXError.audioProcessingFailed
+        for (idx, slice) in slices.enumerated() {
+            let outURL = packDir.appendingPathComponent("\(idx + 1).wav")
+            try writeWav(buffer: slice, to: outURL)
         }
 
-        // Extract up to 5 distinct active slices across the 1.5s clip so textures
-        // like rain, wood, or pops sound natural and varied on every keystroke.
-        let slices = extractActiveSlices(baseBuffer, count: 5, sliceMs: 180)
-        if slices.isEmpty {
-            let fallback = trimSilenceAndCap(baseBuffer, maxMs: 220) ?? baseBuffer
-            let outURL = packDir.appendingPathComponent("1.wav")
-            try writeWav(buffer: fallback, to: outURL)
-        } else {
-            for (idx, slice) in slices.enumerated() {
-                let outURL = packDir.appendingPathComponent("\(idx + 1).wav")
-                try writeWav(buffer: slice, to: outURL)
+        // Write dedicated Big Key files (space, enter, backspace):
+        // Use AI-generated special clips when present, otherwise derive deeper pitch variants
+        // locally at zero extra API cost so every pack has distinct big-key acoustics.
+        let specialKeys: [(filename: String, data: Data?, fallbackSemitones: Double)] = [
+            ("space.wav", payload.space, -3.5),
+            ("enter.wav", payload.enter, -2.0),
+            ("backspace.wav", payload.backspace, -1.5)
+        ]
+
+        for item in specialKeys {
+            var chosen: AVAudioPCMBuffer?
+            if let keyData = item.data,
+               let keyBuf = pcmBufferFromRawPCM44100(data: keyData),
+               let keyHit = extractActiveSlices(keyBuf, count: 1, sliceMs: max(sliceMs, 1600)).first {
+                chosen = keyHit
+            } else {
+                chosen = RecipeEngine.resample(slices[0], semitones: item.fallbackSemitones) ?? slices[0]
+            }
+            if let bufferToWrite = chosen {
+                try writeWav(buffer: bufferToWrite, to: packDir.appendingPathComponent(item.filename))
             }
         }
 
         return packID
     }
 
+    private struct ServerSFXPayload {
+        let isGameOrMelodic: Bool
+        let typing: Data
+        let space: Data?
+        let enter: Data?
+        let backspace: Data?
+    }
+
+    private struct ServerSFXJSON: Decodable {
+        let isGameOrMelodic: Bool?
+        let typing: String
+        let space: String?
+        let enter: String?
+        let backspace: String?
+    }
+
+    private static func requestAudioOrPlan(urlString: String, jsonBody: Data, apiKeyHeader: String?) async throws -> ServerSFXPayload {
+        guard let url = URL(string: urlString) else {
+            throw SFXError.apiFailed("Invalid SFX service URL.")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let apiKeyHeader, !apiKeyHeader.isEmpty {
+            request.setValue(apiKeyHeader, forHTTPHeaderField: "xi-api-key")
+        }
+        request.httpBody = jsonBody
+        request.timeoutInterval = 35
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            throw SFXError.apiFailed("SFX service returned HTTP \(code).")
+        }
+
+        let contentType = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+        if contentType.contains("application/json"),
+           let decoded = try? JSONDecoder().decode(ServerSFXJSON.self, from: data),
+           let typingData = Data(base64Encoded: decoded.typing) {
+            return ServerSFXPayload(
+                isGameOrMelodic: decoded.isGameOrMelodic ?? false,
+                typing: typingData,
+                space: decoded.space.flatMap { Data(base64Encoded: $0) },
+                enter: decoded.enter.flatMap { Data(base64Encoded: $0) },
+                backspace: decoded.backspace.flatMap { Data(base64Encoded: $0) }
+            )
+        }
+
+        return ServerSFXPayload(isGameOrMelodic: false, typing: data, space: nil, enter: nil, backspace: nil)
+    }
+
+    private static func requestAudio(urlString: String, jsonBody: Data, apiKeyHeader: String?) async throws -> Data {
+        guard let url = URL(string: urlString) else {
+            throw SFXError.apiFailed("Invalid SFX service URL.")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let apiKeyHeader, !apiKeyHeader.isEmpty {
+            request.setValue(apiKeyHeader, forHTTPHeaderField: "xi-api-key")
+        }
+        request.httpBody = jsonBody
+        request.timeoutInterval = 30
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw SFXError.apiFailed("SFX service returned HTTP \(http.statusCode).")
+        }
+        return data
+    }
+
     private static func extractActiveSlices(_ src: AVAudioPCMBuffer, count: Int, sliceMs: Double) -> [AVAudioPCMBuffer] {
         guard let ch = src.floatChannelData?[0] else { return [] }
         let total = Int(src.frameLength)
         let sr = src.format.sampleRate
-        let sliceFrames = Int(sliceMs / 1000.0 * sr)
-        guard total > 64 else { return [] }
+        let maxSliceFrames = Int(sliceMs / 1000.0 * sr)
+        let minSliceFrames = Int(0.100 * sr)
+        guard total > Int(0.040 * sr) else { return [] }
 
         var globalMax: Float = 0
         for i in 0..<total {
             let a = abs(ch[i])
             if a > globalMax { globalMax = a }
         }
-        guard globalMax > 0.005 else { return [] }
+        guard globalMax > 0.001 else { return [] }
 
-        // Peak-pick distinct transients: >= 22% of globalMax, separated by >= 120ms.
-        let minPeak = globalMax * 0.22
-        let minSep = Int(0.120 * sr)
-        var pickedPeaks: [Int] = []
-        var suppressed = [Bool](repeating: false, count: total)
-
-        for _ in 0..<count {
-            var bestIdx = -1
-            var bestVal: Float = 0
-            for i in 0..<total where !suppressed[i] {
-                let a = abs(ch[i])
-                if a > bestVal {
-                    bestVal = a
-                    bestIdx = i
-                }
-            }
-            guard bestIdx >= 0, bestVal >= minPeak else { break }
-            pickedPeaks.append(bestIdx)
-            let lo = max(0, bestIdx - minSep)
-            let hi = min(total - 1, bestIdx + minSep)
-            for j in lo...hi { suppressed[j] = true }
+        // Normalize clip peak to 0.85 so quiet-but-real sounds use consistent thresholds.
+        let normGain: Float = 0.85 / globalMax
+        for i in 0..<total {
+            ch[i] *= normGain
         }
 
-        // Build clean onset-aligned slices for each real transient.
-        var hits: [AVAudioPCMBuffer] = []
-        let lookback = Int(0.025 * sr)
-        let preRoll = Int(0.002 * sr)
+        // Compute 5ms RMS envelope to detect real attacks without slicing mid-sustain.
+        let win = max(1, Int(0.005 * sr))
+        let numBins = total / win
+        guard numBins > 2 else { return [] }
+        var env = [Float](repeating: 0, count: numBins)
+        var envMax: Float = 0
+        for b in 0..<numBins {
+            let start = b * win
+            var sumSq: Float = 0
+            for i in start..<(start + win) {
+                sumSq += ch[i] * ch[i]
+            }
+            let rms = sqrt(sumSq / Float(win))
+            env[b] = rms
+            if rms > envMax { envMax = rms }
+        }
+        guard envMax > 0.005 else { return [] }
 
-        for peakIdx in pickedPeaks.sorted() {
-            let peakAmp = abs(ch[peakIdx])
-            let onsetThreshold = peakAmp * 0.08
-            let searchFrom = max(0, peakIdx - lookback)
-            var onset = searchFrom
-            for j in stride(from: peakIdx, through: searchFrom, by: -1) {
-                if abs(ch[j]) < onsetThreshold {
-                    onset = max(0, j - preRoll)
-                    break
+        // Gate + re-arm onset detection:
+        // Only trigger a new hit after a true 30ms silence gap (<3% of previous hit RMS)
+        // so any continuous sound is never split mid-phrase.
+        let triggerFloor = max(envMax * 0.25, 0.020)
+        let minBinsBetweenOnsets = max(1, Int(0.140 / 0.005)) // 140ms
+        var onsets: [Int] = []
+        var armed = true
+        var rearmQuietRun = 0
+        var activeHitPeakRMS: Float = 0
+        var lastOnsetBin = -minBinsBetweenOnsets
+
+        for b in 0..<numBins {
+            let cur = env[b]
+            if !armed {
+                if cur < max(activeHitPeakRMS * 0.03, envMax * 0.025) {
+                    rearmQuietRun += 1
+                    if rearmQuietRun >= 6 { // 30ms true silence
+                        armed = true
+                        rearmQuietRun = 0
+                    }
+                } else {
+                    rearmQuietRun = 0
                 }
             }
 
-            let len = min(sliceFrames, total - onset)
-            guard len > Int(0.020 * sr),
-                  let slice = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: AVAudioFrameCount(len)),
+            if armed && cur >= triggerFloor && (b - lastOnsetBin) >= minBinsBetweenOnsets {
+                // Find exact sample onset just before the transient rises
+                let searchStart = max(0, (b - 4) * win)
+                let searchEnd = min(total - 1, (b + 3) * win)
+                var localPeak: Float = 0
+                for j in searchStart...searchEnd {
+                    localPeak = max(localPeak, abs(ch[j]))
+                }
+                let thresh = localPeak * 0.06
+                var onsetSample = searchStart
+                for j in searchStart...searchEnd {
+                    if abs(ch[j]) >= thresh {
+                        onsetSample = max(0, j - Int(0.002 * sr))
+                        break
+                    }
+                }
+
+                onsets.append(onsetSample)
+                lastOnsetBin = b
+                armed = false
+                rearmQuietRun = 0
+                // Track peak RMS across the next ~80ms for re-arm threshold
+                let peakEnd = min(numBins, b + 16)
+                activeHitPeakRMS = env[b..<peakEnd].max() ?? cur
+                if onsets.count >= count { break }
+            }
+        }
+
+        // Build each hit up to natural decay (or next hit onset / maxSliceFrames)
+        var rawHits: [(buffer: AVAudioPCMBuffer, peak: Float)] = []
+        for idx in 0..<onsets.count {
+            let onset = onsets[idx]
+            let nextOnsetGap = (idx + 1 < onsets.count) ? max(minSliceFrames, onsets[idx + 1] - onset - Int(0.004 * sr)) : maxSliceFrames
+            let capLen = min(maxSliceFrames, min(total - onset, nextOnsetGap))
+            guard capLen > Int(0.030 * sr) else { continue }
+
+            // Measure local peak RMS of this hit, then stop early once tail decays to real silence
+            let onsetBin = min(numBins - 1, onset / win)
+            let hitPeakEndBin = min(numBins, onsetBin + 20)
+            let hitPeakRMS = env[onsetBin..<hitPeakEndBin].max() ?? envMax
+            let silenceRMS = max(hitPeakRMS * 0.015, 0.002)
+
+            var endLen = capLen
+            var stoppedNaturally = false
+            let minBin = onsetBin + (minSliceFrames / win)
+            let maxBin = min(numBins - 1, (onset + capLen) / win)
+            if maxBin > minBin + 5 {
+                var quietRun = 0
+                for b in minBin...maxBin {
+                    if env[b] < silenceRMS {
+                        quietRun += 1
+                        if quietRun >= 5 { // 25ms of natural silence
+                            endLen = min(capLen, max(minSliceFrames, (b * win) - onset))
+                            stoppedNaturally = true
+                            break
+                        }
+                    } else {
+                        quietRun = 0
+                    }
+                }
+            }
+
+            guard let slice = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: AVAudioFrameCount(endLen)),
                   let outCh = slice.floatChannelData?[0] else { continue }
-            slice.frameLength = AVAudioFrameCount(len)
-            for i in 0..<len {
-                outCh[i] = ch[onset + i]
+            slice.frameLength = AVAudioFrameCount(endLen)
+            var slicePeak: Float = 0
+            for i in 0..<endLen {
+                let s = ch[onset + i]
+                outCh[i] = s
+                if abs(s) > slicePeak { slicePeak = abs(s) }
             }
-            let fadeIn = min(len, Int(0.002 * sr))
+            guard slicePeak > 0.02 else { continue }
+
+            let fadeIn = min(endLen, Int(0.002 * sr))
             for i in 0..<fadeIn { outCh[i] *= Float(i) / Float(fadeIn) }
-            let fadeOut = min(len, Int(0.020 * sr))
-            for i in 0..<fadeOut { outCh[len - 1 - i] *= Float(i) / Float(fadeOut) }
-            hits.append(slice)
+            // Smooth raised-cosine fade-out: 25ms if already decayed, 140ms if capped
+            let fadeOutMs = stoppedNaturally ? 0.025 : 0.140
+            let fadeOut = min(endLen / 2, Int(fadeOutMs * sr))
+            if fadeOut > 0 {
+                for i in 0..<fadeOut {
+                    let t = Float(i) / Float(fadeOut) // 0 at end -> 1 at fade start
+                    let gain = 0.5 * (1.0 - cos(Float.pi * t))
+                    outCh[endLen - 1 - i] *= gain
+                }
+            }
+            rawHits.append((slice, slicePeak))
         }
+
+        let maxHitPeak = rawHits.map(\.peak).max() ?? 0
+        let hits = rawHits.filter { $0.peak >= maxHitPeak * 0.30 }.map(\.buffer)
 
         guard !hits.isEmpty else { return [] }
 
         // If fewer than `count` real hits were found, derive subtle pitch variants
-        // from the real hits instead of ever slicing silent gaps.
+        // from the real hits instead of ever slicing sustained tails or silent gaps.
         if hits.count >= count {
             return Array(hits.prefix(count))
         }
@@ -204,37 +405,6 @@ enum SFXGenerator {
             }
         }
         return buffer
-    }
-
-    private static func trimSilenceAndCap(_ src: AVAudioPCMBuffer, maxMs: Double) -> AVAudioPCMBuffer? {
-        guard let ch = src.floatChannelData?[0] else { return nil }
-        let total = Int(src.frameLength)
-        guard total > 0 else { return nil }
-
-        // Find first sample above -36dB (~0.015) so keystroke triggers with zero dead air.
-        var start = 0
-        for i in 0..<total {
-            if abs(ch[i]) > 0.015 {
-                start = max(0, i - 64)
-                break
-            }
-        }
-        let maxFrames = Int(maxMs / 1000.0 * src.format.sampleRate)
-        let len = min(total - start, maxFrames)
-        guard len > 16,
-              let out = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: AVAudioFrameCount(len)),
-              let outCh = out.floatChannelData?[0] else { return nil }
-        out.frameLength = AVAudioFrameCount(len)
-        for i in 0..<len {
-            outCh[i] = ch[start + i]
-        }
-        // Short 10ms fade-out to avoid clicks
-        let fade = min(len, Int(0.010 * src.format.sampleRate))
-        for i in 0..<fade {
-            let idx = len - 1 - i
-            outCh[idx] *= Float(i) / Float(fade)
-        }
-        return out
     }
 
     private static func writeWav(buffer: AVAudioPCMBuffer, to url: URL) throws {

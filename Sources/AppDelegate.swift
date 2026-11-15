@@ -14,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var settingsWindow: NSWindow?
     var soundLabWindow: NSWindow?
     var soundPickerWindow: NSWindow?
+    var proWindow: NSWindow?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -36,6 +37,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _, _, _ in
                 self?.updateStatusIcon()
+                self?.updateMenu()
+            }
+            .store(in: &cancellables)
+
+        let pro = ProManager.shared
+        Publishers.CombineLatest(pro.$isPro, pro.$credits)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _, _ in
                 self?.updateMenu()
             }
             .store(in: &cancellables)
@@ -118,7 +127,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         } else {
             statusTitle = "KeySound · \(SoundPackCatalog.displayName(for: currentProfile))"
         }
-        let titleItem = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
+        let pro = ProManager.shared
+        let tierBadge = pro.isPro ? "★ PRO" : "Free"
+        let titleItem = NSMenuItem(title: "\(statusTitle)  ·  \(tierBadge) (\(pro.credits) Credits)", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         menu.addItem(NSMenuItem.separator())
@@ -180,6 +191,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         menu.addItem(NSMenuItem(title: "Browse All Sounds…", action: #selector(openSoundPickerWindow), keyEquivalent: "b"))
         menu.addItem(NSMenuItem(title: "Sound Lab…", action: #selector(openSoundLabWindow), keyEquivalent: "l"))
+
+        let studioTitle = pro.credits > 0
+            ? "✨ AI Sound Studio · PRO (\(pro.credits) left)"
+            : "✨ AI Sound Studio · PRO (Out of Credits)"
+        menu.addItem(NSMenuItem(title: studioTitle, action: #selector(openAIStudioTab), keyEquivalent: ""))
+
+        let proTitle = pro.isPro
+            ? "Pro Pass & Credits (\(pro.credits) left)…"
+            : "Upgrade to Pro ($9.99)…"
+        menu.addItem(NSMenuItem(title: proTitle, action: #selector(openProUpgradeWindow), keyEquivalent: ""))
+
         menu.addItem(NSMenuItem(title: "Settings & Credits…", action: #selector(openSettingsWindow), keyEquivalent: ","))
 
         menu.addItem(NSMenuItem.separator())
@@ -242,25 +264,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc func openSoundLabWindow() {
-        if currentProfile != AudioEngineManager.recipeProfileName {
-            selectProfile(AudioEngineManager.recipeProfileName)
-        }
+        openSoundLab(initialTab: .mixer)
+    }
 
+    @objc func openAIStudioTab() {
+        openSoundLab(initialTab: .studio)
+    }
+
+    private func openSoundLab(initialTab: SoundLabView.LabTab) {
+        let hostingController = NSHostingController(rootView: SoundLabView(initialTab: initialTab))
         if soundLabWindow == nil {
-            let hostingController = NSHostingController(rootView: SoundLabView())
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 580, height: 640),
+                contentRect: NSRect(x: 0, y: 0, width: 580, height: 650),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered, defer: false)
             window.center()
             window.setFrameAutosaveName("SoundLabWindow")
-            window.contentViewController = hostingController
             window.title = "Sound Lab"
             window.isReleasedWhenClosed = false
             soundLabWindow = window
         }
-
+        soundLabWindow?.contentViewController = hostingController
         if let win = soundLabWindow { showAsNormalWindow(win) }
+    }
+
+    @objc func openProUpgradeWindow() {
+        if proWindow == nil {
+            let hostingController = NSHostingController(rootView: ProUpgradeView())
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 470, height: 460),
+                styleMask: [.titled, .closable],
+                backing: .buffered, defer: false)
+            window.center()
+            window.setFrameAutosaveName("ProUpgradeWindow")
+            window.contentViewController = hostingController
+            window.title = "KeySound Pro & Credits"
+            window.isReleasedWhenClosed = false
+            proWindow = window
+        }
+        if let win = proWindow { showAsNormalWindow(win) }
     }
 
     private func showAsNormalWindow(_ window: NSWindow) {
@@ -276,7 +318,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let closing = notification.object as? NSWindow
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            let windows = [self.settingsWindow, self.soundLabWindow, self.soundPickerWindow]
+            let windows = [self.settingsWindow, self.soundLabWindow, self.soundPickerWindow, self.proWindow]
             let anyVisible = windows.contains { win in
                 guard let w = win, w !== closing else { return false }
                 return w.isVisible
@@ -323,6 +365,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
 func eventCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
     let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon!).takeUnretainedValue()
+
+    if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+        if let tap = appDelegate.eventTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
+        return Unmanaged.passUnretained(event)
+    }
+
     let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
 
     // Global mute hotkey: Control + Option + M (keyCode 46)

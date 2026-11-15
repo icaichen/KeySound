@@ -5,6 +5,13 @@ import UniformTypeIdentifiers
 // plain-English controls, and recipe import/export sharing.
 
 struct SoundLabView: View {
+    enum LabTab: String, CaseIterable {
+        case mixer = "Switch Mixer"
+        case studio = "AI Sound Studio · PRO"
+    }
+
+    @ObservedObject private var pro = ProManager.shared
+    @State private var activeTab: LabTab
     @State private var recipe: SoundRecipe
     @State private var savedFlash = false
     @State private var showAdvanced = false
@@ -17,13 +24,17 @@ struct SoundLabView: View {
     @State private var matrixBase: AISoundDesigner.SwitchBase = .tactile
     @State private var matrixMod: AISoundDesigner.AcousticMod = .thock
 
-    // AI Sound Designer & SFX state
-    @State private var aiPrompt: String = ""
-    @State private var isGeneratingAI = false
-    @State private var aiStatusMessage: String?
-    @State private var aiError: String?
+    // AI Sound Studio (Pro SFX Pack) state
+    @State private var sfxPrompt: String = ""
+    @State private var isGeneratingSFX = false
+    @State private var sfxStatus: String?
+    @State private var sfxError: String?
+    @State private var customPacks: [SoundPackInfo] = []
+    @State private var activeCustomPackID: String?
+    @State private var pinnedIDs: Set<String> = []
 
-    init() {
+    init(initialTab: LabTab = .mixer) {
+        _activeTab = State(initialValue: initialTab)
         let engine = AudioEngineManager.shared
         _recipe = State(initialValue: engine.currentRecipe ?? engine.bundledRecipe() ?? SoundRecipe.fallback)
     }
@@ -40,43 +51,34 @@ struct SoundLabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    header
-                    acousticMatrixSection
-                    aiDesignerSection
-                    layerSection(
-                        "Click (Initial Snap)",
-                        subtitle: "Sharp first contact when your finger hits the keycap",
-                        layer: \.layers.click
-                    )
-                    layerSection(
-                        "Body (Main Tone)",
-                        subtitle: "Core thock, clack, or pop of the switch",
-                        layer: \.layers.body
-                    )
-                    layerSection(
-                        "Release (Key Up)",
-                        subtitle: "Softer return sound when the key springs back",
-                        layer: \.layers.release
-                    )
-                    bigKeysSection
-                    masterSection
-                    DisclosureGroup("Advanced (Room & Humanize)", isExpanded: $showAdvanced) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            spaceSection
-                            humanizeSection
-                        }
-                        .padding(.top, 8)
-                    }
-                    footer
+            Picker("Mode", selection: $activeTab) {
+                ForEach(LabTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue).tag(tab)
                 }
-                .padding()
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .onChange(of: activeTab) { newTab in
+                if newTab == .studio {
+                    reloadCustomPacks()
+                }
+            }
+
+            Divider()
+
+            if activeTab == .mixer {
+                mixerTabContent
+            } else {
+                aiStudioTabContent
+            }
+
             Divider()
             testTypingBar
         }
-        .frame(width: 580, height: 640)
+        .frame(width: 580, height: 650)
         .onAppear {
             catalog = AudioEngineManager.shared.sampleCatalog()
             presets = AudioEngineManager.shared.bundledPresetURLs()
@@ -85,6 +87,250 @@ struct SoundLabView: View {
                 selectedPreset = names.first(where: { $0 == "custom-thock.recipe.json" })
                     ?? names.first ?? ""
             }
+            reloadCustomPacks()
+        }
+    }
+
+    private var mixerTabContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                header
+                acousticMatrixSection
+                layerSection(
+                    "Click (Initial Snap)",
+                    subtitle: "Sharp first contact when your finger hits the keycap",
+                    layer: \.layers.click
+                )
+                layerSection(
+                    "Body (Main Tone)",
+                    subtitle: "Core thock, clack, or pop of the switch",
+                    layer: \.layers.body
+                )
+                layerSection(
+                    "Release (Key Up)",
+                    subtitle: "Softer return sound when the key springs back",
+                    layer: \.layers.release
+                )
+                bigKeysSection
+                masterSection
+                DisclosureGroup("Advanced (Room & Humanize)", isExpanded: $showAdvanced) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        spaceSection
+                        humanizeSection
+                    }
+                    .padding(.top, 8)
+                }
+                footer
+            }
+            .padding()
+        }
+    }
+
+    private var aiStudioTabContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Label("AI Sound Studio", systemImage: "wand.and.stars")
+                                .font(.headline)
+                            Text(pro.isPro ? "PRO ACTIVE" : "PRO")
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(pro.isPro ? Color.green.opacity(0.18) : Color.accentColor.opacity(0.18))
+                                .foregroundColor(pro.isPro ? .green : .accentColor)
+                                .cornerRadius(4)
+                            Spacer()
+                            Button(action: {
+                                (NSApp.delegate as? AppDelegate)?.openProUpgradeWindow()
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkles")
+                                    Text("\(pro.credits) Credits")
+                                }
+                                .font(.caption.bold())
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.accentColor.opacity(0.12))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(10)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Manage Pro Pass & AI Sound Credits")
+                        }
+
+                        Text("Create brand-new keystroke sound packs from any idea—raindrops, wooden fish, high heels, bubble wrap, or anything else. KeySound detects real transients for zero-latency typing.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        HStack(spacing: 8) {
+                            TextField("Describe any sound (e.g. \"water drop\", \"wooden fish\")", text: $sfxPrompt)
+                                .textFieldStyle(.roundedBorder)
+                                .onSubmit { generateSFXPack() }
+                            Button(action: {
+                                if pro.canGenerateSFX {
+                                    generateSFXPack()
+                                } else {
+                                    (NSApp.delegate as? AppDelegate)?.openProUpgradeWindow()
+                                }
+                            }) {
+                                if isGeneratingSFX {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Text(pro.canGenerateSFX ? "Generate (1 Credit)" : "Get Credits…")
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(isGeneratingSFX || (pro.canGenerateSFX && sfxPrompt.trimmingCharacters(in: .whitespaces).isEmpty))
+                        }
+
+                        Text("Prompt Tip: Describe a crisp single impact or material rather than long ambient scenes.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                ForEach(["water drop", "wooden fish", "bubble wrap pop", "high heel clicking", "typewriter bell", "bamboo tap"], id: \.self) { tip in
+                                    Button(tip) { sfxPrompt = tip }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                }
+                            }
+                        }
+
+                        if let status = sfxStatus {
+                            Text(status).font(.caption).foregroundColor(.green)
+                        }
+                        if let err = sfxError {
+                            Text(err).font(.caption).foregroundColor(.red)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                }
+
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Your AI Sound Packs").font(.subheadline.bold())
+                            Spacer()
+                            Text("\(customPacks.count) packs").font(.caption).foregroundColor(.secondary)
+                        }
+
+                        if customPacks.isEmpty {
+                            Text("No AI sound packs yet. Generate one above to test it live.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                        } else {
+                            ForEach(customPacks) { pack in
+                                HStack(spacing: 10) {
+                                    Button(action: { activateCustomPack(pack.id) }) {
+                                        Image(systemName: activeCustomPackID == pack.id ? "checkmark.circle.fill" : "circle")
+                                            .foregroundColor(activeCustomPackID == pack.id ? .accentColor : .secondary)
+                                    }
+                                    .buttonStyle(.borderless)
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(pack.displayName).font(.subheadline)
+                                        Text(pack.summary).font(.caption2).foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+
+                                    Button(action: { togglePinCustomPack(pack.id) }) {
+                                        Image(systemName: pinnedIDs.contains(pack.id) ? "star.fill" : "star")
+                                            .foregroundColor(pinnedIDs.contains(pack.id) ? .yellow : .secondary)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("Pin to menu bar")
+
+                                    Button(action: { deleteCustomPack(pack.id) }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("Delete this AI sound pack")
+                                }
+                                .padding(.vertical, 4)
+                                Divider()
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding()
+        }
+    }
+
+    private func reloadCustomPacks() {
+        customPacks = SoundPackCatalog.allPacks().filter { $0.category == .custom && !$0.id.hasPrefix(SoundPackCatalog.savedRecipePrefix) }
+        pinnedIDs = Set(SoundPackCatalog.pinnedIDs())
+        if let delegate = NSApp.delegate as? AppDelegate {
+            activeCustomPackID = delegate.currentProfile
+        }
+    }
+
+    private func generateSFXPack() {
+        guard !isGeneratingSFX else { return }
+        guard pro.canGenerateSFX else {
+            (NSApp.delegate as? AppDelegate)?.openProUpgradeWindow()
+            return
+        }
+        let prompt = sfxPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !prompt.isEmpty else { return }
+
+        sfxError = nil
+        sfxStatus = nil
+        isGeneratingSFX = true
+        let key = EnvConfig.elevenLabsApiKey
+        Task {
+            do {
+                let packID = try await SFXGenerator.generatePack(prompt: prompt, apiKey: key)
+                await MainActor.run {
+                    pro.consumeCredit()
+                    activateCustomPack(packID)
+                    reloadCustomPacks()
+                    sfxStatus = "Created & activated \"\(SoundPackCatalog.displayName(for: packID))\". Type below to test!"
+                    isGeneratingSFX = false
+                }
+            } catch {
+                await MainActor.run {
+                    sfxError = error.localizedDescription
+                    isGeneratingSFX = false
+                }
+            }
+        }
+    }
+
+    private func activateCustomPack(_ id: String) {
+        activeCustomPackID = id
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.loadProfiles()
+            delegate.selectProfile(id)
+        } else {
+            AudioEngineManager.shared.loadSounds(for: id)
+        }
+    }
+
+    private func togglePinCustomPack(_ id: String) {
+        let nowPinned = !pinnedIDs.contains(id)
+        if nowPinned { pinnedIDs.insert(id) } else { pinnedIDs.remove(id) }
+        SoundPackCatalog.setPinned(id, pinned: nowPinned)
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.updateMenu()
+        }
+    }
+
+    private func deleteCustomPack(_ id: String) {
+        SoundPackCatalog.deleteCustomSound(id: id)
+        if activeCustomPackID == id {
+            activateCustomPack("CherryMX_Blue_PBT_keycaps")
+        }
+        reloadCustomPacks()
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.loadProfiles()
+            delegate.updateMenu()
         }
     }
 
@@ -167,104 +413,6 @@ struct SoundLabView: View {
         let built = AISoundDesigner.buildFromMatrix(base: matrixBase, mod: matrixMod, catalog: catalog)
         recipe = built
         AudioEngineManager.shared.updateRecipe(built)
-    }
-
-    private var aiDesignerSection: some View {
-        let hasMixKey = !EnvConfig.deepseekApiKey.isEmpty || !EnvConfig.geminiApiKey.isEmpty
-
-        return GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Label("AI Switch Mixer (DeepSeek / Gemini)", systemImage: "sparkles")
-                        .font(.subheadline.bold())
-                    Spacer()
-                    Text(hasMixKey ? "API Key Loaded" : "Smart Offline Mode")
-                        .font(.caption2)
-                        .foregroundColor(hasMixKey ? .green : .secondary)
-                }
-
-                HStack(spacing: 8) {
-                    TextField("Describe a mechanical keyboard feel (e.g. \"Deep creamy gasket thock\")", text: $aiPrompt)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit { runAIDesigner() }
-                    Button(action: runAIDesigner) {
-                        if isGeneratingAI {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Text("AI Mix")
-                        }
-                    }
-                    .disabled(isGeneratingAI || aiPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .help("Mixes real mechanical switch recordings to match your description")
-                }
-
-                Text("Tip: Describe switch type + mods (e.g. foam, gasket, lubed). For non-keyboard SFX like raindrops, use Browse All Sounds.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(["Deep creamy gasket thock", "Quiet office Topre", "Crisp retro ABS clack", "Woody mahjong marble"], id: \.self) { tip in
-                            Button(tip) {
-                                aiPrompt = tip
-                                runAIDesigner()
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
-                    }
-                }
-
-                if let status = aiStatusMessage {
-                    Text(status)
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
-
-                if let err = aiError {
-                    Text(err)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-            }
-            .padding(.vertical, 4)
-        }
-    }
-
-    private func runAIDesigner() {
-        aiError = nil
-        aiStatusMessage = nil
-        isGeneratingAI = true
-        let prompt = aiPrompt
-        let currentCatalog = catalog
-        let dsKey = EnvConfig.deepseekApiKey
-        let gmKey = EnvConfig.geminiApiKey
-        Task {
-            do {
-                let result = try await AISoundDesigner.generateWithAI(
-                    prompt: prompt,
-                    catalog: currentCatalog,
-                    deepseekKey: dsKey,
-                    geminiKey: gmKey
-                )
-                await MainActor.run {
-                    var updated = result.recipe
-                    let cleanName = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !cleanName.isEmpty {
-                        updated.meta.name = String(cleanName.prefix(32))
-                    }
-                    recipe = updated
-                    AudioEngineManager.shared.updateRecipe(updated)
-                    aiStatusMessage = "\(result.statusNote) — edit name below & click Save Mix to keep it."
-                    isGeneratingAI = false
-                }
-            } catch {
-                await MainActor.run {
-                    aiError = error.localizedDescription
-                    isGeneratingAI = false
-                }
-            }
-        }
     }
 
     // MARK: - Layer channel strip
@@ -515,8 +663,16 @@ struct SoundLabView: View {
             }
             .buttonStyle(.borderedProminent)
 
+            Button("Use This Sound") {
+                AudioEngineManager.shared.updateRecipe(recipe)
+                if let delegate = NSApp.delegate as? AppDelegate {
+                    delegate.selectProfile(AudioEngineManager.recipeProfileName)
+                }
+            }
+            .buttonStyle(.bordered)
+
             if savedFlash {
-                Text("Saved to Library!").foregroundColor(.green).font(.caption)
+                Text("Saved!").foregroundColor(.green).font(.caption)
             }
 
             Spacer()

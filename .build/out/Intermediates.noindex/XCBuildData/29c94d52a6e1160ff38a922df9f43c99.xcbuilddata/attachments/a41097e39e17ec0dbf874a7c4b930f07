@@ -1,0 +1,179 @@
+{
+  "" : {
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/KeySound-primary.dia",
+    "emit-module-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/KeySound-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/KeySound-primary-emit-module.dia",
+    "pch" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/KeySound-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/KeySound-primary.swiftdeps"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/DerivedSources/resource_bundle_accessor.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/resource_bundle_accessor~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AppDelegate.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AppDelegate~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AudioEngineManager.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioEngineManager~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AudioSettings.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AudioSettings~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/EnvConfig.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/EnvConfig~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/MicMonitor.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/MicMonitor~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/ProManager.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProManager~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/ProUpgradeView.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/ProUpgradeView~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/AISoundDesigner.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/AISoundDesigner~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/Recipe.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/Recipe~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/RecipeEngine.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/RecipeEngine~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/SFXGenerator.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SFXGenerator~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SettingsView.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SettingsView~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SoundLabView.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundLabView~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SoundPackCatalog.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPackCatalog~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/SoundPickerView.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/SoundPickerView~partial.swiftmodule"
+  },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift" : {
+    "const-values" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.swiftconstvalues",
+    "dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.d",
+    "diagnostics" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.dia",
+    "index-unit-output-path" : "/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.o",
+    "swift-dependencies" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main.swiftdeps",
+    "swiftmodule" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Debug/KeySound-p.build/Objects-normal/arm64/main~partial.swiftmodule"
+  }
+}

@@ -69,21 +69,22 @@ class AudioEngineManager: ObservableObject {
         // Attach nodes
         engine.attach(speedUnit)
         engine.attach(playersMixer)
-        
-        let format = mainMixer.outputFormat(forBus: 0)
-        
-        // Connect PlayersMixer -> SpeedUnit -> MainMixer
-        // Note: Varispeed is 1-in-1-out, so we mix all players into playersMixer first.
-        engine.connect(playersMixer, to: speedUnit, format: format)
-        engine.connect(speedUnit, to: mainMixer, format: format)
-        
-        // Create pool
         for _ in 0..<poolSize {
             let player = AVAudioPlayerNode()
             engine.attach(player)
             players.append(player)
-            // Connect player -> playersMixer
-            engine.connect(player, to: playersMixer, format: format)
+        }
+
+        connectGraph()
+
+        NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: nil
+        ) { [weak self] _ in
+            self?.audioQueue.async {
+                self?.handleConfigurationChange()
+            }
         }
         
         // Start engine
@@ -99,6 +100,35 @@ class AudioEngineManager: ObservableObject {
         self.pitch = UserDefaults.standard.float(forKey: "pitch")
         if self.pitch == 0 { self.pitch = 1.0 }
         
+        updateVolume()
+        updatePitch()
+    }
+
+    private func connectGraph() {
+        let format = mainMixer.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { return }
+
+        if isRecipeProfile {
+            applyRecipeChainAfterTear()
+        } else {
+            engine.connect(playersMixer, to: speedUnit, format: format)
+            engine.connect(speedUnit, to: mainMixer, format: format)
+        }
+
+        for player in players {
+            engine.connect(player, to: playersMixer, format: format)
+        }
+    }
+
+    private func handleConfigurationChange() {
+        connectGraph()
+        if !engine.isRunning {
+            do {
+                try engine.start()
+            } catch {
+                print("Failed to restart audio engine after config change: \(error)")
+            }
+        }
         updateVolume()
         updatePitch()
     }

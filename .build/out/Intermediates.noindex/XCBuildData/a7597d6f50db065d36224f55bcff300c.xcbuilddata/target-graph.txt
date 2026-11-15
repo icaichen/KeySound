@@ -1,0 +1,7 @@
+Target dependency graph (3 targets)
+Target 'AllExcludingTests' in project 'Aggregate'
+➜ Explicit dependency on target 'KeySound-product' in project 'KeySound'
+➜ Explicit dependency on target 'KeySound_KeySound' in project 'KeySound'
+Target 'KeySound-product' in project 'KeySound'
+➜ Explicit dependency on target 'KeySound_KeySound' in project 'KeySound'
+Target 'KeySound_KeySound' in project 'KeySound' (no dependencies)

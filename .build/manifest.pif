@@ -5,11 +5,11 @@
       "name" : "KeySound",
       "path" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator",
       "projects" : [
-        "49de53b2fde050e3bba970e9164602dee99c628b4f21a5378f3ccf816988b2c3",
+        "68d0af029584f1cf8e94d03a3945d59afa1e23bf6b3b821217cf2d95377a28e2",
         "f1de6063a5853e52aed3052c19a72879690d8dc4ccb57fa171b7e4d31a1de128"
       ]
     },
-    "signature" : "5e61034090180123abfccc3e942536eb6bd058661988d415142dc36fdfeb8b67",
+    "signature" : "6f4ffcbbaa6fa9c27317791fd94a929e488f5e1aa64f91a93461217e8a559d65",
     "type" : "workspace"
   },
   {
@@ -241,6 +241,22 @@
               {
                 "fileType" : "sourcecode.swift",
                 "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_5",
+                "name" : "ProManager.swift",
+                "path" : "ProManager.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_6",
+                "name" : "ProUpgradeView.swift",
+                "path" : "ProUpgradeView.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_7",
                 "name" : "Recipe/AISoundDesigner.swift",
                 "path" : "Recipe/AISoundDesigner.swift",
                 "sourceTree" : "<group>",
@@ -248,7 +264,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_6",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_8",
                 "name" : "Recipe/Recipe.swift",
                 "path" : "Recipe/Recipe.swift",
                 "sourceTree" : "<group>",
@@ -256,7 +272,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_7",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_9",
                 "name" : "Recipe/RecipeEngine.swift",
                 "path" : "Recipe/RecipeEngine.swift",
                 "sourceTree" : "<group>",
@@ -264,7 +280,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_8",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_10",
                 "name" : "Recipe/SFXGenerator.swift",
                 "path" : "Recipe/SFXGenerator.swift",
                 "sourceTree" : "<group>",
@@ -272,7 +288,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_9",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_11",
                 "name" : "SettingsView.swift",
                 "path" : "SettingsView.swift",
                 "sourceTree" : "<group>",
@@ -280,7 +296,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_10",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_12",
                 "name" : "SoundLabView.swift",
                 "path" : "SoundLabView.swift",
                 "sourceTree" : "<group>",
@@ -288,7 +304,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_11",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_13",
                 "name" : "SoundPackCatalog.swift",
                 "path" : "SoundPackCatalog.swift",
                 "sourceTree" : "<group>",
@@ -296,7 +312,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_12",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_14",
                 "name" : "SoundPickerView.swift",
                 "path" : "SoundPickerView.swift",
                 "sourceTree" : "<group>",
@@ -304,7 +320,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_13",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_15",
                 "name" : "main.swift",
                 "path" : "main.swift",
                 "sourceTree" : "<group>",
@@ -386,6 +402,22 @@
               {
                 "fileType" : "sourcecode.swift",
                 "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_5",
+                "name" : "ProManager.swift",
+                "path" : "ProManager.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_6",
+                "name" : "ProUpgradeView.swift",
+                "path" : "ProUpgradeView.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_7",
                 "name" : "Recipe/AISoundDesigner.swift",
                 "path" : "Recipe/AISoundDesigner.swift",
                 "sourceTree" : "<group>",
@@ -393,7 +425,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_6",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_8",
                 "name" : "Recipe/Recipe.swift",
                 "path" : "Recipe/Recipe.swift",
                 "sourceTree" : "<group>",
@@ -401,7 +433,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_7",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_9",
                 "name" : "Recipe/RecipeEngine.swift",
                 "path" : "Recipe/RecipeEngine.swift",
                 "sourceTree" : "<group>",
@@ -409,7 +441,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_8",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_10",
                 "name" : "Recipe/SFXGenerator.swift",
                 "path" : "Recipe/SFXGenerator.swift",
                 "sourceTree" : "<group>",
@@ -417,7 +449,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_9",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_11",
                 "name" : "SettingsView.swift",
                 "path" : "SettingsView.swift",
                 "sourceTree" : "<group>",
@@ -425,7 +457,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_10",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_12",
                 "name" : "SoundLabView.swift",
                 "path" : "SoundLabView.swift",
                 "sourceTree" : "<group>",
@@ -433,7 +465,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_11",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_13",
                 "name" : "SoundPackCatalog.swift",
                 "path" : "SoundPackCatalog.swift",
                 "sourceTree" : "<group>",
@@ -441,7 +473,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_12",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_14",
                 "name" : "SoundPickerView.swift",
                 "path" : "SoundPickerView.swift",
                 "sourceTree" : "<group>",
@@ -449,7 +481,7 @@
               },
               {
                 "fileType" : "sourcecode.swift",
-                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_13",
+                "guid" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_15",
                 "name" : "main.swift",
                 "path" : "main.swift",
                 "sourceTree" : "<group>",
@@ -475,13 +507,13 @@
       "projectIsPackage" : "true",
       "projectName" : "KeySound",
       "targets" : [
-        "a9e7da3ad823285e670febe725d00d93cc4d92514baca05a81411a68eec28582",
+        "6bde6f580e1d2ee205a9982e21073974cd5961426176abd133c30d6645a83737",
         "889d836b7e3a9214f0a4c64ccb1b1ab1a3832635362ea4c92ca514a429907d9a",
-        "e588d7c71ab70fbfd87106ef2617e806174d08bae94954cb1d36204dff3b9e97",
+        "4b31f85ea5884a027e3f8f21a94948daef7c3ac1d720c1f88b1ab8bc34e9dc50",
         "1f5f2b261975726b560eba8c2cc206b2ba17432d6a5d90be77cc236359f4eba2"
       ]
     },
-    "signature" : "49de53b2fde050e3bba970e9164602dee99c628b4f21a5378f3ccf816988b2c3",
+    "signature" : "68d0af029584f1cf8e94d03a3945d59afa1e23bf6b3b821217cf2d95377a28e2",
     "type" : "project"
   },
   {
@@ -719,6 +751,24 @@
 
               ],
               "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_14",
+              "guid" : "PACKAGE-PRODUCT:keyboardsoundsimulator_KeySound.KeySound::BUILDPHASE_0::14",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_2::REF_15",
+              "guid" : "PACKAGE-PRODUCT:keyboardsoundsimulator_KeySound.KeySound::BUILDPHASE_0::15",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
             }
           ],
           "guid" : "PACKAGE-PRODUCT:keyboardsoundsimulator_KeySound.KeySound::BUILDPHASE_0",
@@ -749,7 +799,7 @@
       "productTypeIdentifier" : "com.apple.product-type.tool",
       "type" : "standard"
     },
-    "signature" : "a9e7da3ad823285e670febe725d00d93cc4d92514baca05a81411a68eec28582",
+    "signature" : "6bde6f580e1d2ee205a9982e21073974cd5961426176abd133c30d6645a83737",
     "type" : "target"
   },
   {
@@ -1133,6 +1183,24 @@
 
               ],
               "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_14",
+              "guid" : "PACKAGE-TARGET:KeySound--49DDF7F62598C9C6-testable::BUILDPHASE_0::14",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:keyboardsoundsimulator::MAINGROUP::REF_6::REF_15",
+              "guid" : "PACKAGE-TARGET:KeySound--49DDF7F62598C9C6-testable::BUILDPHASE_0::15",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
             }
           ],
           "guid" : "PACKAGE-TARGET:KeySound--49DDF7F62598C9C6-testable::BUILDPHASE_0",
@@ -1163,7 +1231,7 @@
       "productTypeIdentifier" : "org.swift.product-type.common.object",
       "type" : "standard"
     },
-    "signature" : "e588d7c71ab70fbfd87106ef2617e806174d08bae94954cb1d36204dff3b9e97",
+    "signature" : "4b31f85ea5884a027e3f8f21a94948daef7c3ac1d720c1f88b1ab8bc34e9dc50",
     "type" : "target"
   },
   {

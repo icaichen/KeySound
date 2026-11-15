@@ -4,6 +4,8 @@
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/AudioSettings.swift
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/EnvConfig.swift
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/MicMonitor.swift
+/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/ProManager.swift
+/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/ProUpgradeView.swift
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/AISoundDesigner.swift
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/Recipe.swift
 /Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/Recipe/RecipeEngine.swift
