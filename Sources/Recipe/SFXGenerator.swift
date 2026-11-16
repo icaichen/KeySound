@@ -60,27 +60,35 @@ enum SFXGenerator {
         let jsonData = try JSONSerialization.data(withJSONObject: body)
 
         let payload: ServerSFXPayload
-        if let proxyResp = try? await requestAudioOrPlan(
-            urlString: proxyEndpoint,
-            jsonBody: jsonData,
-            apiKeyHeader: nil
-        ) {
-            payload = proxyResp
-        } else if !localKey.isEmpty {
-            let rawData = try await requestAudio(
-                urlString: "https://api.elevenlabs.io/v1/sound-generation?output_format=pcm_44100",
+        var usedProxy = false
+        do {
+            _ = try await ProManager.shared.ensureQuotaToken()
+            payload = try await requestAudioOrPlan(
+                urlString: proxyEndpoint,
                 jsonBody: jsonData,
-                apiKeyHeader: localKey
+                apiKeyHeader: nil,
+                signClientRequest: true
             )
-            payload = ServerSFXPayload(
-                isGameOrMelodic: isGameOrChimePrompt,
-                typing: rawData,
-                space: nil,
-                enter: nil,
-                backspace: nil
-            )
-        } else {
-            throw SFXError.apiFailed("AI Sound service is temporarily unavailable. Please try again in a moment.")
+            usedProxy = true
+        } catch let proxyError {
+            if !localKey.isEmpty {
+                let rawData = try await requestAudio(
+                    urlString: "https://api.elevenlabs.io/v1/sound-generation?output_format=pcm_44100",
+                    jsonBody: jsonData,
+                    apiKeyHeader: localKey
+                )
+                payload = ServerSFXPayload(
+                    isGameOrMelodic: isGameOrChimePrompt,
+                    typing: rawData,
+                    space: nil,
+                    enter: nil,
+                    backspace: nil
+                )
+            } else if let sfxErr = proxyError as? SFXError {
+                throw sfxErr
+            } else {
+                throw SFXError.apiFailed(proxyError.localizedDescription)
+            }
         }
 
         guard let baseBuffer = pcmBufferFromRawPCM44100(data: payload.typing) else {
@@ -128,6 +136,10 @@ enum SFXGenerator {
             }
         }
 
+        if !usedProxy {
+            ProManager.shared.consumeCredit()
+        }
+
         return packID
     }
 
@@ -145,9 +157,22 @@ enum SFXGenerator {
         let space: String?
         let enter: String?
         let backspace: String?
+        let remainingCredits: Int?
+        let quotaToken: String?
     }
 
-    private static func requestAudioOrPlan(urlString: String, jsonBody: Data, apiKeyHeader: String?) async throws -> ServerSFXPayload {
+    private struct ServerErrorJSON: Decodable {
+        let error: String?
+        let remainingCredits: Int?
+        let quotaToken: String?
+    }
+
+    private static func requestAudioOrPlan(
+        urlString: String,
+        jsonBody: Data,
+        apiKeyHeader: String?,
+        signClientRequest: Bool = false
+    ) async throws -> ServerSFXPayload {
         guard let url = URL(string: urlString) else {
             throw SFXError.apiFailed("Invalid SFX service URL.")
         }
@@ -157,19 +182,48 @@ enum SFXGenerator {
         if let apiKeyHeader, !apiKeyHeader.isEmpty {
             request.setValue(apiKeyHeader, forHTTPHeaderField: "xi-api-key")
         }
+        if signClientRequest {
+            ProManager.shared.applyClientAuthHeaders(to: &request)
+        }
         request.httpBody = jsonBody
         request.timeoutInterval = 35
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-            throw SFXError.apiFailed("SFX service returned HTTP \(code).")
+        guard let http = response as? HTTPURLResponse else {
+            throw SFXError.apiFailed("Invalid response from SFX service.")
+        }
+
+        let headerToken = http.value(forHTTPHeaderField: "X-Quota-Token")
+        let headerCredits = http.value(forHTTPHeaderField: "X-Credits-Remaining").flatMap { Int($0) }
+        if headerToken != nil || headerCredits != nil {
+            ProManager.shared.applyServerQuota(token: headerToken, remainingCredits: headerCredits)
+        }
+
+        guard (200...299).contains(http.statusCode) else {
+            if let errObj = try? JSONDecoder().decode(ServerErrorJSON.self, from: data) {
+                if errObj.quotaToken != nil || errObj.remainingCredits != nil {
+                    ProManager.shared.applyServerQuota(
+                        token: errObj.quotaToken,
+                        remainingCredits: errObj.remainingCredits
+                    )
+                }
+                if let msg = errObj.error, !msg.isEmpty {
+                    throw SFXError.apiFailed(msg)
+                }
+            }
+            throw SFXError.apiFailed("SFX service returned HTTP \(http.statusCode).")
         }
 
         let contentType = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
         if contentType.contains("application/json"),
            let decoded = try? JSONDecoder().decode(ServerSFXJSON.self, from: data),
            let typingData = Data(base64Encoded: decoded.typing) {
+            if decoded.quotaToken != nil || decoded.remainingCredits != nil {
+                ProManager.shared.applyServerQuota(
+                    token: decoded.quotaToken,
+                    remainingCredits: decoded.remainingCredits
+                )
+            }
             return ServerSFXPayload(
                 isGameOrMelodic: decoded.isGameOrMelodic ?? false,
                 typing: typingData,

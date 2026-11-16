@@ -88,6 +88,11 @@
     "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/SoundPickerView.bc",
     "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/SoundPickerView.o"
   },
+  "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/UpdateManager.swift" : {
+    "index-unit-output-path" : "/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/UpdateManager.o",
+    "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/UpdateManager.bc",
+    "object" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/UpdateManager.o"
+  },
   "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/Sources/main.swift" : {
     "index-unit-output-path" : "/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/main.o",
     "llvm-bc" : "/Users/chencai/Development/Keysound/KeyboardSoundSimulator/.build/out/Intermediates.noindex/KeySound.build/Release/KeySound-p.build/Objects-normal/arm64/main.bc",

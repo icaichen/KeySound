@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings = AudioSettings.shared
+    @ObservedObject var updater = UpdateManager.shared
     @State private var showLicenses = false
 
     var body: some View {
@@ -50,6 +51,41 @@ struct SettingsView: View {
                             Text("Gently softens rapid typing bursts so fast typing stays comfortable.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                // Updates
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Software Updates").font(.subheadline).bold()
+                            Spacer()
+                            Text("v\(updater.currentVersion) (\(updater.currentBuild))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if let msg = updater.statusMessage {
+                            Text(msg)
+                                .font(.caption)
+                                .foregroundColor(updater.availableUpdate != nil ? .accentColor : .secondary)
+                        }
+
+                        HStack(spacing: 8) {
+                            Button(updater.isChecking ? "Checking…" : "Check for Updates") {
+                                updater.checkForUpdates(interactive: true)
+                            }
+                            .disabled(updater.isChecking || updater.isInstalling)
+
+                            if let update = updater.availableUpdate {
+                                Button(updater.isInstalling ? "Installing…" : "Install v\(update.version)") {
+                                    updater.downloadAndInstall(update)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(updater.isInstalling)
+                            }
                         }
                     }
                     .padding(.vertical, 4)

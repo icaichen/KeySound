@@ -1,5 +1,7 @@
 import Foundation
 import Combine
+import CryptoKit
+import IOKit
 
 struct LicenseActivationResult {
     let plan: String
@@ -41,6 +43,10 @@ final class ProManager: ObservableObject {
     private let licenseKeyStorageKey = "keysound.creemLicenseKey"
     private let instanceIdStorageKey = "keysound.creemInstanceId"
     private let redeemedKeysStorageKey = "keysound.redeemedLicenseKeys"
+    private let quotaTokenStorageKey = "keysound.serverQuotaToken"
+    private let fallbackDeviceIdStorageKey = "keysound.deviceId"
+
+    private static let clientSigningSecret = "ks_app_v1_9f4c2a8e71d04b3a9c6e12f8a4b7d503"
 
     @Published var isPro: Bool {
         didSet { UserDefaults.standard.set(isPro, forKey: isProKey) }
@@ -73,7 +79,7 @@ final class ProManager: ObservableObject {
         URL(string: "\(checkoutBaseEndpoint)?plan=\(plan)")
     }
 
-    /// Consumes 1 credit only after an AI generation succeeds.
+    /// Consumes 1 credit only after an AI generation succeeds (used for local-key fallback).
     func consumeCredit() {
         let decrement = {
             if self.credits > 0 {
@@ -85,6 +91,99 @@ final class ProManager: ObservableObject {
         } else {
             DispatchQueue.main.async(execute: decrement)
         }
+    }
+
+    /// Stable per-Mac device identifier (hardware IOPlatformUUID with UserDefaults fallback).
+    var deviceId: String {
+        if let uuid = Self.hardwarePlatformUUID(), !uuid.isEmpty {
+            return uuid
+        }
+        if let saved = UserDefaults.standard.string(forKey: fallbackDeviceIdStorageKey), !saved.isEmpty {
+            return saved
+        }
+        let generated = UUID().uuidString
+        UserDefaults.standard.set(generated, forKey: fallbackDeviceIdStorageKey)
+        return generated
+    }
+
+    var currentQuotaToken: String? {
+        let token = UserDefaults.standard.string(forKey: quotaTokenStorageKey)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (token?.isEmpty == false) ? token : nil
+    }
+
+    func applyServerQuota(token: String?, remainingCredits: Int?) {
+        let update = {
+            if let token, !token.isEmpty {
+                UserDefaults.standard.set(token, forKey: self.quotaTokenStorageKey)
+            }
+            if let remainingCredits {
+                self.credits = max(0, remainingCredits)
+            }
+        }
+        if Thread.isMainThread {
+            update()
+        } else {
+            DispatchQueue.main.async(execute: update)
+        }
+    }
+
+    func applyClientAuthHeaders(to request: inout URLRequest) {
+        let method = (request.httpMethod ?? "POST").uppercased()
+        let path = request.url?.path ?? "/"
+        let devId = deviceId
+        let ts = String(Int64(Date().timeIntervalSince1970 * 1000))
+        let nonce = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        let canonical = "\(method)\n\(path)\n\(devId)\n\(ts)\n\(nonce)"
+
+        let key = SymmetricKey(data: Data(Self.clientSigningSecret.utf8))
+        let mac = HMAC<SHA256>.authenticationCode(for: Data(canonical.utf8), using: key)
+        let sigHex = mac.map { String(format: "%02x", $0) }.joined()
+
+        request.setValue(devId, forHTTPHeaderField: "X-KS-Device")
+        request.setValue(ts, forHTTPHeaderField: "X-KS-Ts")
+        request.setValue(nonce, forHTTPHeaderField: "X-KS-Nonce")
+        request.setValue(sigHex, forHTTPHeaderField: "X-KS-Sig")
+        if let token = currentQuotaToken {
+            request.setValue(token, forHTTPHeaderField: "X-Quota-Token")
+        }
+    }
+
+    /// Ensures the app has a server-signed quota token (requesting the 3-credit trial grant if needed).
+    func ensureQuotaToken() async throws -> String {
+        if let existing = currentQuotaToken {
+            return existing
+        }
+        guard let url = URL(string: Self.licenseEndpoint) else {
+            throw LicenseActivationError.invalidResponse
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["action": "trial"])
+        applyClientAuthHeaders(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let httpStatus = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+
+        guard (200...299).contains(httpStatus),
+              let token = json?["quotaToken"] as? String, !token.isEmpty else {
+            let msg = (json?["error"] as? String) ?? "Failed to initialize trial credits (HTTP \(httpStatus))."
+            throw LicenseActivationError.serverError(msg)
+        }
+
+        let serverCredits = json?["credits"] as? Int
+        applyServerQuota(token: token, remainingCredits: serverCredits)
+        return token
+    }
+
+    private static func hardwarePlatformUUID() -> String? {
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+        guard service != 0 else { return nil }
+        defer { IOObjectRelease(service) }
+        let prop = IORegistryEntryCreateCFProperty(service, "IOPlatformUUID" as CFString, kCFAllocatorDefault, 0)
+        return prop?.takeRetainedValue() as? String
     }
 
     /// Activates a Creem Pro Pass or Credit Top-Up license key via /api/license.
@@ -114,6 +213,7 @@ final class ProManager: ObservableObject {
         request.httpMethod = "POST"
         request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        applyClientAuthHeaders(to: &request)
 
         let deviceName = Host.current().localizedName ?? "KeySound Mac"
         let payload: [String: Any] = [
@@ -149,12 +249,21 @@ final class ProManager: ObservableObject {
 
             let plan = (json?["plan"] as? String) ?? "pro"
             let granted = (json?["creditsToGrant"] as? Int) ?? (plan == "topup" ? 20 : 15)
+            let serverCredits = json?["serverCredits"] as? Int
+            let quotaToken = json?["quotaToken"] as? String
             let instanceId = json?["instanceId"] as? String
 
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.isPro = true
-                self.credits += granted
+                if let quotaToken, !quotaToken.isEmpty {
+                    UserDefaults.standard.set(quotaToken, forKey: self.quotaTokenStorageKey)
+                }
+                if let serverCredits {
+                    self.credits = max(0, serverCredits)
+                } else {
+                    self.credits += granted
+                }
 
                 var updated = Set(UserDefaults.standard.stringArray(forKey: self.redeemedKeysStorageKey) ?? [])
                 updated.insert(normalized)
@@ -189,6 +298,7 @@ final class ProManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: licenseKeyStorageKey)
         UserDefaults.standard.removeObject(forKey: instanceIdStorageKey)
         UserDefaults.standard.removeObject(forKey: redeemedKeysStorageKey)
+        UserDefaults.standard.removeObject(forKey: quotaTokenStorageKey)
     }
     #endif
 }

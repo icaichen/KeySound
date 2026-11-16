@@ -49,6 +49,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
             .store(in: &cancellables)
 
+        UpdateManager.shared.$availableUpdate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateMenu()
+            }
+            .store(in: &cancellables)
+
+        UpdateManager.shared.checkInBackgroundIfNeeded()
+
         checkAccessibility()
     }
 
@@ -204,6 +213,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         menu.addItem(NSMenuItem(title: "Settings & Credits…", action: #selector(openSettingsWindow), keyEquivalent: ","))
 
+        let updateTitle: String
+        if let update = UpdateManager.shared.availableUpdate {
+            updateTitle = "⬆︎ Update Available (v\(update.version))…"
+        } else {
+            updateTitle = "Check for Updates…"
+        }
+        menu.addItem(NSMenuItem(title: updateTitle, action: #selector(checkForUpdatesMenuAction), keyEquivalent: ""))
+
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
@@ -303,6 +320,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             proWindow = window
         }
         if let win = proWindow { showAsNormalWindow(win) }
+    }
+
+    @objc func checkForUpdatesMenuAction() {
+        UpdateManager.shared.checkForUpdates(interactive: true)
     }
 
     private func showAsNormalWindow(_ window: NSWindow) {

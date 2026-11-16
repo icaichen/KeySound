@@ -288,7 +288,6 @@ struct SoundLabView: View {
             do {
                 let packID = try await SFXGenerator.generatePack(prompt: prompt, apiKey: key)
                 await MainActor.run {
-                    pro.consumeCredit()
                     activateCustomPack(packID)
                     reloadCustomPacks()
                     sfxStatus = "Created & activated \"\(SoundPackCatalog.displayName(for: packID))\". Type below to test!"
