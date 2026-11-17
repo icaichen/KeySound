@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var proWindow: NSWindow?
 
     private var cancellables = Set<AnyCancellable>()
+    private var eventTapRecoveryTimer: Timer?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         loadProfiles()
@@ -58,7 +59,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         UpdateManager.shared.checkInBackgroundIfNeeded()
 
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            if self.eventTap == nil {
+                self.setupEventTap()
+            } else if let tap = self.eventTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+            }
+        }
+
         checkAccessibility()
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 
     func checkAccessibility() {
@@ -418,6 +436,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
             CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
             CGEvent.tapEnable(tap: tap, enable: true)
+            eventTapRecoveryTimer?.invalidate()
+            eventTapRecoveryTimer = nil
+        } else if eventTapRecoveryTimer == nil {
+            eventTapRecoveryTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                if self.eventTap == nil {
+                    self.setupEventTap()
+                } else {
+                    self.eventTapRecoveryTimer?.invalidate()
+                    self.eventTapRecoveryTimer = nil
+                }
+            }
         }
     }
 
@@ -431,7 +461,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 }
 
 func eventCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon!).takeUnretainedValue()
+    guard let refcon else {
+        return Unmanaged.passUnretained(event)
+    }
+    let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
 
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
         if let tap = appDelegate.eventTap {

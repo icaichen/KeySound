@@ -28,6 +28,8 @@ class AudioEngineManager: ObservableObject {
     private var isRecipeProfile = false
     private var recipeEQ: AVAudioUnitEQ?
     private var recipeReverb: AVAudioUnitReverb?
+    private var currentGraphFormat: AVAudioFormat?
+    private var activeProfile: String?
     
     // Per-profile volume adjustments to balance loudness
     private let profileVolumeSettings: [String: Float] = [
@@ -106,21 +108,29 @@ class AudioEngineManager: ObservableObject {
 
     private func connectGraph() {
         let format = mainMixer.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0 else { return }
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            currentGraphFormat = nil
+            return
+        }
 
         if isRecipeProfile {
             applyRecipeChainAfterTear()
         } else {
+            engine.disconnectNodeOutput(playersMixer)
+            engine.disconnectNodeOutput(speedUnit)
             engine.connect(playersMixer, to: speedUnit, format: format)
             engine.connect(speedUnit, to: mainMixer, format: format)
         }
 
         for player in players {
+            engine.disconnectNodeOutput(player)
             engine.connect(player, to: playersMixer, format: format)
         }
+        currentGraphFormat = format
     }
 
     private func handleConfigurationChange() {
+        let oldFormat = currentGraphFormat
         connectGraph()
         if !engine.isRunning {
             do {
@@ -131,6 +141,12 @@ class AudioEngineManager: ObservableObject {
         }
         updateVolume()
         updatePitch()
+
+        if let newFormat = currentGraphFormat,
+           let profile = activeProfile,
+           oldFormat == nil || oldFormat?.sampleRate != newFormat.sampleRate || oldFormat?.channelCount != newFormat.channelCount {
+            loadSounds(for: profile)
+        }
     }
     
     func updateVolume() {
@@ -151,6 +167,7 @@ class AudioEngineManager: ObservableObject {
     func loadSounds(for profile: String) {
         audioQueue.async { [weak self] in
             guard let self = self else { return }
+            self.activeProfile = profile
             
             self.soundBuffers.removeAll()
             self.specialSoundBuffers.removeAll()
@@ -395,6 +412,7 @@ class AudioEngineManager: ObservableObject {
     /// Insert playersMixer -> EQ -> [reverb] -> speedUnit for recipe mode.
     private func applyRecipeChain(_ recipe: SoundRecipe) {
         let format = mainMixer.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { return }
         engine.disconnectNodeOutput(playersMixer)
         
         let eq = AVAudioUnitEQ(numberOfBands: 3)
@@ -452,7 +470,9 @@ class AudioEngineManager: ObservableObject {
         // Restore the direct playersMixer -> speedUnit connection
         let format = mainMixer.outputFormat(forBus: 0)
         engine.disconnectNodeOutput(playersMixer)
-        engine.connect(playersMixer, to: speedUnit, format: format)
+        if format.sampleRate > 0, format.channelCount > 0 {
+            engine.connect(playersMixer, to: speedUnit, format: format)
+        }
         recipeEngine = nil
         isRecipeProfile = false
     }
@@ -532,19 +552,35 @@ class AudioEngineManager: ObservableObject {
     private func loadBuffer(url: URL) -> AVAudioPCMBuffer? {
         do {
             let file = try AVAudioFile(forReading: url)
+            guard file.length > 0 else { return nil }
             let processingFormat = file.processingFormat
             let standardFormat = mainMixer.outputFormat(forBus: 0) // Convert to mixer format
+            guard standardFormat.sampleRate > 0, standardFormat.channelCount > 0,
+                  processingFormat.sampleRate > 0 else { return nil }
             
             // Read file into processing format buffer
             guard let fileBuffer = AVAudioPCMBuffer(pcmFormat: processingFormat, frameCapacity: AVAudioFrameCount(file.length)) else { return nil }
             try file.read(into: fileBuffer)
+            guard fileBuffer.frameLength > 0 else { return nil }
+
+            if processingFormat == standardFormat {
+                return fileBuffer
+            }
             
             // Convert to standard format
             guard let converter = AVAudioConverter(from: processingFormat, to: standardFormat) else { return nil }
-            guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: standardFormat, frameCapacity: AVAudioFrameCount(file.length)) else { return nil } // Approx length
+            let ratio = standardFormat.sampleRate / processingFormat.sampleRate
+            let outCapacity = AVAudioFrameCount(ceil(Double(fileBuffer.frameLength) * ratio)) + 64
+            guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: standardFormat, frameCapacity: outCapacity) else { return nil }
             
             var error: NSError? = nil
-            converter.convert(to: convertedBuffer, error: &error) { packetCount, outStatus in
+            var consumed = false
+            converter.convert(to: convertedBuffer, error: &error) { _, outStatus in
+                if consumed {
+                    outStatus.pointee = .endOfStream
+                    return nil
+                }
+                consumed = true
                 outStatus.pointee = .haveData
                 return fileBuffer
             }
@@ -554,7 +590,7 @@ class AudioEngineManager: ObservableObject {
                 return nil
             }
             
-            return convertedBuffer
+            return convertedBuffer.frameLength > 0 ? convertedBuffer : nil
         } catch {
             print("Error reading audio file \(url): \(error)")
             return nil
@@ -562,13 +598,10 @@ class AudioEngineManager: ObservableObject {
     }
     
     private func normalize(buffer: AVAudioPCMBuffer, targetVolume: Float = 1.0) {
-        // Simple normalization: Find max amplitude and scale to targetVolume (default 1.0)
-        // Or apply a fixed boost if needed.
-        // Using vDSP for performance if possible, or simple loop.
-        
         guard let floatData = buffer.floatChannelData else { return }
         let channelCount = Int(buffer.format.channelCount)
         let frameLength = Int(buffer.frameLength)
+        guard channelCount > 0, frameLength > 0 else { return }
         
         var maxAmp: Float = 0.0
         
@@ -656,6 +689,12 @@ class AudioEngineManager: ObservableObject {
     }
     
     private func playBuffer(_ buffer: AVAudioPCMBuffer, volume: Float = 1.0, pan: Float = 0.0) {
+        guard buffer.frameLength > 0 else { return }
+        if currentGraphFormat == nil {
+            connectGraph()
+        }
+        guard currentGraphFormat != nil else { return }
+
         // Ensure engine is running (lightweight check)
         if !engine.isRunning {
             do {
@@ -668,6 +707,13 @@ class AudioEngineManager: ObservableObject {
         
         let player = players[currentPlayerIndex]
         currentPlayerIndex = (currentPlayerIndex + 1) % poolSize
+        guard player.engine != nil else { return }
+        let playerFormat = player.outputFormat(forBus: 0)
+        guard playerFormat.sampleRate > 0, playerFormat.channelCount > 0,
+              buffer.format.sampleRate == playerFormat.sampleRate,
+              buffer.format.channelCount == playerFormat.channelCount else {
+            return
+        }
         
         if player.isPlaying {
             player.stop() // Clear previous buffer if any (unlikely to happen often with 32 players)
