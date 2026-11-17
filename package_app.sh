@@ -77,6 +77,32 @@ fi
 echo "Verifying signature..."
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
+NOTARY_PROFILE="${NOTARY_PROFILE:-KeySound}"
+NOTARY_ZIP="/tmp/${APP_NAME}-notarize.zip"
+rm -f "$NOTARY_ZIP"
+ditto -c -k --keepParent "$APP_BUNDLE" "$NOTARY_ZIP"
+
+if xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+    echo "Submitting $APP_BUNDLE to Apple Notary Service (profile: $NOTARY_PROFILE)..."
+    xcrun notarytool submit "$NOTARY_ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
+    echo "Stapling notarization ticket..."
+    xcrun stapler staple "$APP_BUNDLE"
+    echo "Verifying Gatekeeper assessment..."
+    spctl -a -vvv -t exec "$APP_BUNDLE"
+else
+    echo "⚠️  Notarization skipped: keychain profile '$NOTARY_PROFILE' not found."
+    echo "    Run once: xcrun notarytool store-credentials \"$NOTARY_PROFILE\" --apple-id <EMAIL> --team-id G8C56JYBN5 --password <APP_SPECIFIC_PASSWORD>"
+fi
+rm -f "$NOTARY_ZIP"
+
+echo "Creating distributable KeySound.zip..."
+rm -f KeySound.zip
+ditto -c -k --keepParent "$APP_BUNDLE" KeySound.zip
+if [ -d "../website" ]; then
+    cp KeySound.zip ../website/KeySound.zip
+    echo "Updated ../website/KeySound.zip"
+fi
+
 echo "Installing to /Applications/$APP_BUNDLE..."
 pkill -x "$APP_NAME" 2>/dev/null || true
 rm -rf "/Applications/$APP_BUNDLE"
