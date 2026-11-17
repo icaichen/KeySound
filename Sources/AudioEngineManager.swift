@@ -709,9 +709,16 @@ class AudioEngineManager: ObservableObject {
         currentPlayerIndex = (currentPlayerIndex + 1) % poolSize
         guard player.engine != nil else { return }
         let playerFormat = player.outputFormat(forBus: 0)
-        guard playerFormat.sampleRate > 0, playerFormat.channelCount > 0,
-              buffer.format.sampleRate == playerFormat.sampleRate,
-              buffer.format.channelCount == playerFormat.channelCount else {
+        guard playerFormat.sampleRate > 0, playerFormat.channelCount > 0 else {
+            return
+        }
+
+        let bufferToPlay: AVAudioPCMBuffer
+        if buffer.format.isEqual(playerFormat) {
+            bufferToPlay = buffer
+        } else if let converted = Self.convert(buffer: buffer, to: playerFormat) {
+            bufferToPlay = converted
+        } else {
             return
         }
         
@@ -721,7 +728,37 @@ class AudioEngineManager: ObservableObject {
         
         player.volume = volume
         player.pan = pan
-        player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+        player.scheduleBuffer(bufferToPlay, at: nil, options: .interrupts, completionHandler: nil)
         player.play()
+    }
+
+    private static func convert(buffer: AVAudioPCMBuffer, to targetFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
+        guard buffer.frameLength > 0,
+              buffer.format.sampleRate > 0,
+              targetFormat.sampleRate > 0,
+              targetFormat.channelCount > 0,
+              let converter = AVAudioConverter(from: buffer.format, to: targetFormat) else {
+            return nil
+        }
+        let ratio = targetFormat.sampleRate / buffer.format.sampleRate
+        let outCapacity = AVAudioFrameCount(ceil(Double(buffer.frameLength) * ratio)) + 64
+        guard let outBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: outCapacity) else {
+            return nil
+        }
+        var error: NSError? = nil
+        var consumed = false
+        converter.convert(to: outBuffer, error: &error) { _, outStatus in
+            if consumed {
+                outStatus.pointee = .endOfStream
+                return nil
+            }
+            consumed = true
+            outStatus.pointee = .haveData
+            return buffer
+        }
+        if error != nil || outBuffer.frameLength == 0 {
+            return nil
+        }
+        return outBuffer
     }
 }
