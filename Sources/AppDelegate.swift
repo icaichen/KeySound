@@ -120,8 +120,54 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func updateStatusIcon() {
         let muted = AudioSettings.shared.effectiveMuted
-        let symbol = muted ? "speaker.slash" : "keyboard"
-        statusItem?.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "KeySound")
+        statusItem?.button?.image = Self.makeMenuBarLogoImage(muted: muted)
+        statusItem?.button?.toolTip = muted ? "KeySound (Muted)" : "KeySound"
+    }
+
+    /// Draws a crisp 18x18 template icon matching the KeySound keycap + soundwave logo.
+    private static func makeMenuBarLogoImage(muted: Bool) -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let color: NSColor = muted ? NSColor.black.withAlphaComponent(0.45) : .black
+            color.setStroke()
+            color.setFill()
+
+            // Outer keycap rounded square
+            let frameRect = NSRect(x: 1.75, y: 1.75, width: 14.5, height: 14.5)
+            let framePath = NSBezierPath(roundedRect: frameRect, xRadius: 3.6, yRadius: 3.6)
+            framePath.lineWidth = 1.4
+            framePath.stroke()
+
+            // 5-bar centered waveform matching keysound-icon.png
+            let barHeights: [CGFloat] = [3.0, 6.0, 9.2, 6.0, 3.0]
+            let barWidth: CGFloat = 1.4
+            let spacing: CGFloat = 2.35
+            let centerX = rect.midX
+            let centerY = rect.midY
+            let startX = centerX - CGFloat(barHeights.count - 1) * spacing / 2.0
+
+            for (idx, h) in barHeights.enumerated() {
+                let x = startX + CGFloat(idx) * spacing - barWidth / 2.0
+                let y = centerY - h / 2.0
+                let barRect = NSRect(x: x, y: y, width: barWidth, height: h)
+                let barPath = NSBezierPath(roundedRect: barRect, xRadius: barWidth / 2.0, yRadius: barWidth / 2.0)
+                barPath.fill()
+            }
+
+            if muted {
+                let slash = NSBezierPath()
+                slash.move(to: NSPoint(x: 2.5, y: 2.5))
+                slash.line(to: NSPoint(x: 15.5, y: 15.5))
+                slash.lineWidth = 1.6
+                slash.lineCapStyle = .round
+                NSColor.black.setStroke()
+                slash.stroke()
+            }
+
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 
     func updateMenu() {
