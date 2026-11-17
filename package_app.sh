@@ -77,7 +77,7 @@ fi
 echo "Verifying signature..."
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
-NOTARY_PROFILE="${NOTARY_PROFILE:-KeySound}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-justdictate-notary}"
 NOTARY_ZIP="/tmp/${APP_NAME}-notarize.zip"
 rm -f "$NOTARY_ZIP"
 ditto -c -k --keepParent "$APP_BUNDLE" "$NOTARY_ZIP"
