@@ -272,10 +272,14 @@ class AudioEngineManager: ObservableObject {
     /// Current recipe on the engine (nil when a sample profile is active).
     var currentRecipe: SoundRecipe? { recipeEngine?.recipe }
     
-    /// Live-update recipe params from the Sound Lab panel.
+    /// Live-update recipe params from the Sound Lab panel (entering preview mode if needed).
     func updateRecipe(_ recipe: SoundRecipe) {
         audioQueue.async { [weak self] in
-            guard let self = self, self.isRecipeProfile else { return }
+            guard let self = self else { return }
+            if !self.isRecipeProfile {
+                self.setupRecipeMode(overrideRecipe: recipe)
+                return
+            }
             let hadReverb = self.recipeReverb != nil
             self.recipeEngine?.update(recipe: recipe)
             // Space layer toggled -> rebuild the chain; otherwise update node params in place

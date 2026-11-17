@@ -305,6 +305,7 @@ struct SoundLabView: View {
     private func activateCustomPack(_ id: String) {
         activeCustomPackID = id
         if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.preSoundLabProfile = nil
             delegate.loadProfiles()
             delegate.selectProfile(id)
         } else {
@@ -655,10 +656,11 @@ struct SoundLabView: View {
                 let trimmed = toSave.meta.name.trimmingCharacters(in: .whitespacesAndNewlines)
                 toSave.meta.name = trimmed.isEmpty ? "My Custom Mix" : trimmed
                 recipe = toSave
-                AudioEngineManager.shared.saveNamedRecipe(toSave)
+                let savedID = AudioEngineManager.shared.saveNamedRecipe(toSave)
                 if let delegate = NSApp.delegate as? AppDelegate {
+                    delegate.preSoundLabProfile = nil
                     delegate.loadProfiles()
-                    delegate.updateMenu()
+                    delegate.selectProfile(savedID)
                 }
                 withAnimation { savedFlash = true }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -668,8 +670,10 @@ struct SoundLabView: View {
             .buttonStyle(.borderedProminent)
 
             Button("Use This Sound") {
+                AudioEngineManager.shared.saveRecipe(recipe)
                 AudioEngineManager.shared.updateRecipe(recipe)
                 if let delegate = NSApp.delegate as? AppDelegate {
+                    delegate.preSoundLabProfile = nil
                     delegate.selectProfile(AudioEngineManager.recipeProfileName)
                 }
             }

@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private var cancellables = Set<AnyCancellable>()
     private var eventTapRecoveryTimer: Timer?
+    var preSoundLabProfile: String?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         loadProfiles()
@@ -353,6 +354,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func openSoundLab(initialTab: SoundLabView.LabTab) {
+        if soundLabWindow?.isVisible != true {
+            preSoundLabProfile = currentProfile
+        }
         let hostingController = NSHostingController(rootView: SoundLabView(initialTab: initialTab))
         if soundLabWindow == nil {
             let window = NSWindow(
@@ -401,6 +405,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         let closing = notification.object as? NSWindow
+        if closing === soundLabWindow, let previous = preSoundLabProfile {
+            preSoundLabProfile = nil
+            AudioEngineManager.shared.loadSounds(for: previous)
+        }
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             let windows = [self.settingsWindow, self.soundLabWindow, self.soundPickerWindow, self.proWindow]
